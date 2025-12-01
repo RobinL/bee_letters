@@ -4,14 +4,26 @@ import Phaser from 'phaser';
 const SIDEBAR_RATIO = 0.25; // Flower zone takes 25% of screen width
 const DROP_DISTANCE = 80; // How close item needs to be to flower center to register
 
+// Spirograph constants
+const SPIRO_R = 100;     // Outer radius (increased for larger flight)
+const SPIRO_r = 40;      // Inner radius
+const SPIRO_d = 70;      // Distance from center of inner circle
+const SPIRO_SPEED = 0.03; // Animation speed
+const SPIRO_DURATION = 8000; // How long the bee flies (ms)
+const TRAIL_FADE_DURATION = 3000; // How long trail takes to fade (ms)
+
 export default class Game extends Phaser.Scene {
     constructor() {
         super('Game');
+        this.activeBees = []; // Track active bee animations
     }
 
     create() {
         const { width, height } = this.cameras.main;
         this.sidebarWidth = width * SIDEBAR_RATIO;
+
+        // Create graphics object for bee trails
+        this.trailGraphics = this.add.graphics();
 
         // Step 3: Draw debug zone visualization
         this.drawLayoutZones(this.sidebarWidth, width, height);
@@ -24,6 +36,127 @@ export default class Game extends Phaser.Scene {
 
         // Setup drag and drop input
         this.setupDragAndDrop();
+
+        // Store trail points for fading effect
+        this.trailPoints = [];
+    }
+
+    update(time, delta) {
+        // Update all active bee animations
+        this.activeBees.forEach(beeData => {
+            this.updateBeeSpirograph(beeData, delta);
+        });
+
+        // Draw and fade trails
+        this.drawTrails(delta);
+    }
+
+    updateBeeSpirograph(beeData, delta) {
+        // Increment angle
+        beeData.angle += SPIRO_SPEED;
+
+        // Spirograph formula
+        // x = (R - r) * cos(t) + d * cos((R - r) / r * t)
+        // y = (R - r) * sin(t) + d * sin((R - r) / r * t)
+        const t = beeData.angle;
+        const R = SPIRO_R;
+        const r = SPIRO_r;
+        const d = SPIRO_d;
+
+        const x = beeData.centerX + (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
+        const y = beeData.centerY + (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
+
+        // Store previous position for trail (use lastX/lastY from previous frame)
+        if (beeData.lastX !== undefined && beeData.lastY !== undefined) {
+            this.trailPoints.push({
+                x1: beeData.lastX,
+                y1: beeData.lastY,
+                x2: x,
+                y2: y,
+                alpha: 1,
+                color: beeData.trailColor
+            });
+        }
+
+        // Update bee position
+        beeData.bee.x = x;
+        beeData.bee.y = y;
+
+        // Store current position for next frame's trail
+        beeData.lastX = x;
+        beeData.lastY = y;
+
+        // No rotation - keep bee upright
+    }
+
+    drawTrails(delta) {
+        this.trailGraphics.clear();
+
+        // Update and draw each trail point
+        this.trailPoints = this.trailPoints.filter(point => {
+            // Fade out
+            point.alpha -= delta / TRAIL_FADE_DURATION;
+
+            if (point.alpha <= 0) {
+                return false; // Remove this point
+            }
+
+            // Draw line segment with current alpha
+            this.trailGraphics.lineStyle(3, point.color, point.alpha);
+            this.trailGraphics.beginPath();
+            this.trailGraphics.moveTo(point.x1, point.y1);
+            this.trailGraphics.lineTo(point.x2, point.y2);
+            this.trailGraphics.strokePath();
+
+            return true; // Keep this point
+        });
+    }
+
+    spawnBeeSpirograph(flower) {
+        // Pick a random bee
+        const beeKey = Phaser.Utils.Array.GetRandom(['bee_1', 'bee_2']);
+        const bee = this.add.sprite(flower.x, flower.y, beeKey);
+
+        // Scale bee to a nice size
+        const targetSize = 40;
+        const scale = targetSize / Math.max(bee.width, bee.height);
+        bee.setScale(scale);
+
+        // Random trail color (bright, cheerful colors)
+        const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da];
+        const trailColor = Phaser.Utils.Array.GetRandom(colors);
+
+        // Create bee data object
+        const beeData = {
+            bee: bee,
+            centerX: flower.x,
+            centerY: flower.y,
+            angle: 0,
+            trailColor: trailColor,
+            lastX: undefined,
+            lastY: undefined
+        };
+
+        this.activeBees.push(beeData);
+
+        // Remove bee after duration
+        this.time.delayedCall(SPIRO_DURATION, () => {
+            // Fade out bee
+            this.tweens.add({
+                targets: bee,
+                alpha: 0,
+                scale: 0,
+                duration: 500,
+                ease: 'Power2',
+                onComplete: () => {
+                    bee.destroy();
+                    const index = this.activeBees.indexOf(beeData);
+                    if (index > -1) {
+                        this.activeBees.splice(index, 1);
+                    }
+                }
+            });
+        });
     }
 
     setupDragAndDrop() {
@@ -41,7 +174,7 @@ export default class Game extends Phaser.Scene {
 
         this.input.on('dragend', (pointer, gameObject) => {
             gameObject.clearTint();
-            
+
             // Check if dropped on a flower
             const itemData = this.items.find(item => item.sprite === gameObject);
             if (!itemData) return;
@@ -100,6 +233,9 @@ export default class Game extends Phaser.Scene {
         this.time.delayedCall(300, () => {
             flower.sprite.clearTint();
         });
+
+        // Spawn bee with spirograph animation!
+        this.spawnBeeSpirograph(flower);
 
         console.log('Correct! 🎉');
     }
@@ -161,8 +297,8 @@ export default class Game extends Phaser.Scene {
             // Create flower sprite
             const flower = this.add.sprite(centerX, yPos, flowerKey);
 
-            // Scale flower to fit nicely in the sidebar
-            const targetSize = sidebarWidth * 0.7;
+            // Scale flower to fit nicely in the sidebar (smaller size)
+            const targetSize = sidebarWidth * 0.5;
             const scale = targetSize / Math.max(flower.width, flower.height);
             flower.setScale(scale);
 

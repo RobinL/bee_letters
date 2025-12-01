@@ -27,6 +27,10 @@ export default class Preloader extends Phaser.Scene {
         this.load.image('a_item_3', 'assets/items/a_item_3.png');
         this.load.image('a_item_6', 'assets/items/a_item_6.png');
         this.load.image('a_item_7', 'assets/items/a_item_7.png');
+
+        // Load bee sprites
+        this.load.image('bee_1', 'assets/bees/bee_1.png');
+        this.load.image('bee_2', 'assets/bees/bee_2.png');
     }
 
     create() {
