@@ -1,16 +1,14 @@
 import Phaser from 'phaser';
-
-// Layout constants
-const SIDEBAR_RATIO = 0.25; // Flower zone takes 25% of screen width
-const DROP_DISTANCE = 80; // How close item needs to be to flower center to register
-
-// Spirograph constants
-const SPIRO_R = 100;     // Outer radius (increased for larger flight)
-const SPIRO_r = 40;      // Inner radius
-const SPIRO_d = 70;      // Distance from center of inner circle
-const SPIRO_SPEED = 0.03; // Animation speed
-const SPIRO_DURATION = 8000; // How long the bee flies (ms)
-const TRAIL_FADE_DURATION = 3000; // How long trail takes to fade (ms)
+import {
+    SIDEBAR_RATIO,
+    DROP_DISTANCE,
+    BEE_FLIGHT_DURATION,
+    TRAIL_PERSISTENCE,
+    SPIRO_R,
+    SPIRO_r,
+    SPIRO_d,
+    SPIRO_SPEED
+} from '../config.js';
 
 export default class Game extends Phaser.Scene {
     constructor() {
@@ -95,7 +93,7 @@ export default class Game extends Phaser.Scene {
         // Update and draw each trail point
         this.trailPoints = this.trailPoints.filter(point => {
             // Fade out
-            point.alpha -= delta / TRAIL_FADE_DURATION;
+            point.alpha -= delta / TRAIL_PERSISTENCE;
 
             if (point.alpha <= 0) {
                 return false; // Remove this point
@@ -140,7 +138,7 @@ export default class Game extends Phaser.Scene {
         this.activeBees.push(beeData);
 
         // Remove bee after duration
-        this.time.delayedCall(SPIRO_DURATION, () => {
+        this.time.delayedCall(BEE_FLIGHT_DURATION, () => {
             // Fade out bee
             this.tweens.add({
                 targets: bee,
