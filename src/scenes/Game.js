@@ -4,9 +4,8 @@ import {
     DROP_DISTANCE,
     BEE_FLIGHT_DURATION,
     TRAIL_PERSISTENCE,
-    SPIRO_R,
-    SPIRO_r,
-    SPIRO_d,
+    PETAL_PRESETS,
+    SPIRO_VARIATION,
     SPIRO_SPEED
 } from '../config.js';
 
@@ -20,14 +19,15 @@ export default class Game extends Phaser.Scene {
         const { width, height } = this.cameras.main;
         this.sidebarWidth = width * SIDEBAR_RATIO;
 
-        // Create graphics object for bee trails
-        this.trailGraphics = this.add.graphics();
-
         // Step 3: Draw debug zone visualization
         this.drawLayoutZones(this.sidebarWidth, width, height);
 
         // Step 4: Render the flower column
         this.createFlowerColumn(this.sidebarWidth, height);
+
+        // Create graphics object for bee trails (after flowers so it renders on top)
+        this.trailGraphics = this.add.graphics();
+        this.trailGraphics.setDepth(100); // Ensure trails are on top of flowers
 
         // Step 5: Spawn random items on the right
         this.spawnItems(this.sidebarWidth, width, height);
@@ -57,9 +57,9 @@ export default class Game extends Phaser.Scene {
         // x = (R - r) * cos(t) + d * cos((R - r) / r * t)
         // y = (R - r) * sin(t) + d * sin((R - r) / r * t)
         const t = beeData.angle;
-        const R = SPIRO_R;
-        const r = SPIRO_r;
-        const d = SPIRO_d;
+        const R = beeData.spiroR;
+        const r = beeData.spiroR_inner;
+        const d = beeData.spiroD;
 
         const x = beeData.centerX + (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
         const y = beeData.centerY + (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
@@ -124,7 +124,14 @@ export default class Game extends Phaser.Scene {
         const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da];
         const trailColor = Phaser.Utils.Array.GetRandom(colors);
 
-        // Create bee data object
+        // Pick a random petal preset and apply slight variation
+        const preset = Phaser.Utils.Array.GetRandom(PETAL_PRESETS);
+        const vary = (value) => {
+            const variation = 1 + (Math.random() * 2 - 1) * SPIRO_VARIATION;
+            return value * variation;
+        };
+
+        // Create bee data object with unique spirograph parameters
         const beeData = {
             bee: bee,
             centerX: flower.x,
@@ -132,7 +139,11 @@ export default class Game extends Phaser.Scene {
             angle: 0,
             trailColor: trailColor,
             lastX: undefined,
-            lastY: undefined
+            lastY: undefined,
+            // Unique spirograph parameters for this bee
+            spiroR: vary(preset.R),
+            spiroR_inner: vary(preset.r),
+            spiroD: vary(preset.d)
         };
 
         this.activeBees.push(beeData);

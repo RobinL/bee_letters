@@ -11,7 +11,19 @@ export const BEE_FLIGHT_DURATION = 18000;   // How long the bee flies (ms)
 export const TRAIL_PERSISTENCE = 3000;      // How long trail takes to fade (ms)
 
 // ----- Spirograph Pattern -----
-export const SPIRO_R = 100;     // Outer radius
-export const SPIRO_r = 40;      // Inner radius
-export const SPIRO_d = 70;      // Distance from center of inner circle
-export const SPIRO_SPEED = 0.03; // Animation speed (radians per frame)
+// Petal-like patterns work best when (R-r)/r produces nice integer ratios
+// Common petal counts: 3, 4, 5, 6, 7, 8 petals
+export const PETAL_PRESETS = [
+    { petals: 3, R: 80, r: 60, d: 55 },   // 3-petal flower
+    { petals: 4, R: 100, r: 75, d: 65 },  // 4-petal flower
+    { petals: 5, R: 100, r: 80, d: 70 },  // 5-petal flower
+    { petals: 6, R: 90, r: 75, d: 60 },   // 6-petal flower
+    { petals: 7, R: 105, r: 90, d: 75 },  // 7-petal flower
+    { petals: 8, R: 100, r: 87.5, d: 70 }, // 8-petal flower
+];
+
+// Variation range (multiplier applied to preset values)
+export const SPIRO_VARIATION = 0.15;  // +/- 15% variation
+
+export const SPIRO_SPEED = 0.04; // Animation speed (radians per frame)
+
