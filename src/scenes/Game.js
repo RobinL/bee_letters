@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 
 // Layout constants
 const SIDEBAR_RATIO = 0.25; // Flower zone takes 25% of screen width
+const DROP_DISTANCE = 80; // How close item needs to be to flower center to register
 
 export default class Game extends Phaser.Scene {
     constructor() {
@@ -10,16 +11,116 @@ export default class Game extends Phaser.Scene {
 
     create() {
         const { width, height } = this.cameras.main;
-        const sidebarWidth = width * SIDEBAR_RATIO;
+        this.sidebarWidth = width * SIDEBAR_RATIO;
 
         // Step 3: Draw debug zone visualization
-        this.drawLayoutZones(sidebarWidth, width, height);
+        this.drawLayoutZones(this.sidebarWidth, width, height);
 
         // Step 4: Render the flower column
-        this.createFlowerColumn(sidebarWidth, height);
+        this.createFlowerColumn(this.sidebarWidth, height);
 
         // Step 5: Spawn random items on the right
-        this.spawnItems(sidebarWidth, width, height);
+        this.spawnItems(this.sidebarWidth, width, height);
+
+        // Setup drag and drop input
+        this.setupDragAndDrop();
+    }
+
+    setupDragAndDrop() {
+        // Enable drag events
+        this.input.on('dragstart', (pointer, gameObject) => {
+            // Bring to top when dragging
+            this.children.bringToTop(gameObject);
+            gameObject.setTint(0xcccccc);
+        });
+
+        this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+            gameObject.x = dragX;
+            gameObject.y = dragY;
+        });
+
+        this.input.on('dragend', (pointer, gameObject) => {
+            gameObject.clearTint();
+            
+            // Check if dropped on a flower
+            const itemData = this.items.find(item => item.sprite === gameObject);
+            if (!itemData) return;
+
+            // Find the closest flower
+            let closestFlower = null;
+            let closestDistance = Infinity;
+
+            this.flowers.forEach(flower => {
+                const distance = Phaser.Math.Distance.Between(
+                    gameObject.x, gameObject.y,
+                    flower.x, flower.y
+                );
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestFlower = flower;
+                }
+            });
+
+            // Check if close enough to a flower
+            if (closestFlower && closestDistance < DROP_DISTANCE) {
+                // Check if letter matches
+                if (itemData.letter === closestFlower.letter) {
+                    // Correct match!
+                    this.onCorrectMatch(gameObject, closestFlower, itemData);
+                } else {
+                    // Wrong match - return to original position
+                    this.onWrongMatch(gameObject, itemData);
+                }
+            }
+        });
+    }
+
+    onCorrectMatch(sprite, flower, itemData) {
+        // Visual feedback for correct match
+        this.tweens.add({
+            targets: sprite,
+            x: flower.x,
+            y: flower.y,
+            scale: 0,
+            alpha: 0,
+            duration: 300,
+            ease: 'Power2',
+            onComplete: () => {
+                sprite.destroy();
+                // Remove from items array
+                const index = this.items.indexOf(itemData);
+                if (index > -1) {
+                    this.items.splice(index, 1);
+                }
+            }
+        });
+
+        // Flash the flower green
+        flower.sprite.setTint(0x00ff00);
+        this.time.delayedCall(300, () => {
+            flower.sprite.clearTint();
+        });
+
+        console.log('Correct! 🎉');
+    }
+
+    onWrongMatch(sprite, itemData) {
+        // Shake and return to original position
+        this.tweens.add({
+            targets: sprite,
+            x: itemData.originalX,
+            y: itemData.originalY,
+            duration: 300,
+            ease: 'Back.easeOut'
+        });
+
+        // Flash red
+        sprite.setTint(0xff0000);
+        this.time.delayedCall(200, () => {
+            sprite.clearTint();
+        });
+
+        console.log('Try again!');
     }
 
     drawLayoutZones(sidebarWidth, width, height) {
@@ -44,7 +145,7 @@ export default class Game extends Phaser.Scene {
 
     createFlowerColumn(sidebarWidth, height) {
         const centerX = sidebarWidth / 2;
-        const letters = ['A', 'B', 'C'];
+        const letters = ['a', 'b', 'c']; // lowercase letters
         const flowerKeys = ['flower_head_1', 'flower_head_2', 'flower_head_3'];
 
         // Store flower references for later collision detection
@@ -80,7 +181,8 @@ export default class Game extends Phaser.Scene {
                 sprite: flower,
                 letter: letters[i],
                 x: centerX,
-                y: yPos
+                y: yPos,
+                radius: (targetSize * scale) / 2
             });
         }
     }
@@ -114,10 +216,15 @@ export default class Game extends Phaser.Scene {
             // Add slight random rotation for visual interest
             item.setAngle(Phaser.Math.Between(-15, 15));
 
+            // Make item interactive and draggable
+            item.setInteractive({ draggable: true });
+
             this.items.push({
                 sprite: item,
                 key: key,
-                letter: 'a' // All current items are for letter 'a'
+                letter: 'a', // All current items are for letter 'a'
+                originalX: x,
+                originalY: y
             });
         });
     }
