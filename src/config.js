@@ -27,3 +27,10 @@ export const SPIRO_VARIATION = 0.15;  // +/- 15% variation
 
 export const SPIRO_SPEED = 0.04; // Animation speed (radians per frame)
 
+// ----- Letter Items -----
+// Maps each letter to an array of item image names (without .png extension)
+// Items should be in public/assets/items/{letter}/{itemName}.png
+export const LETTER_ITEMS = {
+    a: ['accordian', 'acorn', 'ant', 'arrow', 'astronaut'],
+};
+

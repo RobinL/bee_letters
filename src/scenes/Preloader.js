@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { LETTER_ITEMS } from '../config.js';
 
 export default class Preloader extends Phaser.Scene {
     constructor() {
@@ -21,12 +22,14 @@ export default class Preloader extends Phaser.Scene {
         this.load.image('flower_head_2', 'assets/flower/flower_head_2.png');
         this.load.image('flower_head_3', 'assets/flower/flower_head_3.png');
 
-        // Load item sprites for letter "a"
-        this.load.image('a_item_1', 'assets/items/a_item_1.png');
-        this.load.image('a_item_2', 'assets/items/a_item_2.png');
-        this.load.image('a_item_3', 'assets/items/a_item_3.png');
-        this.load.image('a_item_6', 'assets/items/a_item_6.png');
-        this.load.image('a_item_7', 'assets/items/a_item_7.png');
+        // Load item sprites dynamically from LETTER_ITEMS config
+        Object.entries(LETTER_ITEMS).forEach(([letter, items]) => {
+            items.forEach(itemName => {
+                const key = `${letter}_${itemName}`;
+                const path = `assets/items/${letter}/${itemName}.png`;
+                this.load.image(key, path);
+            });
+        });
 
         // Load bee sprites
         this.load.image('bee_1', 'assets/bees/bee_1.png');

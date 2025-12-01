@@ -6,7 +6,8 @@ import {
     TRAIL_PERSISTENCE,
     PETAL_PRESETS,
     SPIRO_VARIATION,
-    SPIRO_SPEED
+    SPIRO_SPEED,
+    LETTER_ITEMS
 } from '../config.js';
 
 export default class Game extends Phaser.Scene {
@@ -333,7 +334,14 @@ export default class Game extends Phaser.Scene {
     }
 
     spawnItems(sidebarWidth, width, height) {
-        const itemKeys = ['a_item_1', 'a_item_2', 'a_item_3', 'a_item_6', 'a_item_7'];
+        // Build item keys dynamically from LETTER_ITEMS config
+        const itemKeys = [];
+        Object.entries(LETTER_ITEMS).forEach(([letter, items]) => {
+            items.forEach(itemName => {
+                itemKeys.push({ key: `${letter}_${itemName}`, letter });
+            });
+        });
+
         const padding = 60;
 
         // Define play zone boundaries
@@ -345,7 +353,7 @@ export default class Game extends Phaser.Scene {
         // Store item references
         this.items = [];
 
-        itemKeys.forEach((key) => {
+        itemKeys.forEach(({ key, letter }) => {
             // Generate random position in play zone
             const x = Phaser.Math.Between(minX, maxX);
             const y = Phaser.Math.Between(minY, maxY);
@@ -367,7 +375,7 @@ export default class Game extends Phaser.Scene {
             this.items.push({
                 sprite: item,
                 key: key,
-                letter: 'a', // All current items are for letter 'a'
+                letter: letter, // Letter derived from LETTER_ITEMS
                 originalX: x,
                 originalY: y
             });
