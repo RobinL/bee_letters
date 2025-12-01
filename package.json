@@ -1,0 +1,17 @@
+{
+  "name": "bee-letters",
+  "version": "1.0.0",
+  "description": "A letter learning game for kids with bees and flowers",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.70.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
