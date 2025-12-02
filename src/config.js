@@ -7,8 +7,8 @@ export const SIDEBAR_RATIO = 0.25;  // Flower zone takes 25% of screen width
 export const DROP_DISTANCE = 80;    // How close item needs to be to flower center to register
 
 // ----- Bee & Trail Settings -----
-export const BEE_FLIGHT_DURATION = 18000;   // How long the bee flies (ms)
-export const TRAIL_PERSISTENCE = 50000;      // How long trail takes to fade (ms)
+export const BEE_FLIGHT_DURATION = 30000;   // How long the bee flies (ms)
+export const TRAIL_PERSISTENCE = 30000;      // How long trail takes to fade (ms)
 
 // ----- Spirograph Pattern -----
 // Petal-like patterns work best when (R-r)/r produces nice integer ratios
@@ -36,5 +36,5 @@ export const MUSIC_DEFAULT_VOLUME = 0.3;  // Default volume (0-1), 30% is a nice
 export const LETTER_ITEMS = {
     a: ['accordian', 'acorn', 'ant', 'arrow', 'astronaut'],
     b: ['ball', 'banana', 'bear', 'bee', 'bird', 'boat', 'book', 'bus', 'butterfly'],
+    c: ['cake', 'car', 'castle', 'cat', 'clock', 'coat', 'cow', 'crayon', 'cup'],
 };
-

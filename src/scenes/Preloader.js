@@ -28,6 +28,8 @@ export default class Preloader extends Phaser.Scene {
                 const key = `${letter}_${itemName}`;
                 const path = `assets/items/${letter}/${itemName}.png`;
                 this.load.image(key, path);
+                // Load matching voice clip
+                this.load.audio(`voice_${letter}_${itemName}`, `assets/voice/${letter}/${itemName}.webm`);
             });
         });
 
@@ -37,13 +39,27 @@ export default class Preloader extends Phaser.Scene {
 
         // Load garden background
         this.load.image('garden_bg', 'assets/background/garden.png');
+        // Load flower column background
+        this.load.image('flower_bg', 'assets/background/flower_background.png');
+
+        // Load Google WebFont loader to ensure Andika is available before we render text
+        this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
         // Load background music
         this.load.audio('music', 'assets/music/music.mp3');
     }
 
     create() {
-        // Transition to the Game scene
-        this.scene.start('Game');
+        // Ensure the Andika font is fully loaded before starting the game scene
+        if (window.WebFont) {
+            window.WebFont.load({
+                google: { families: ['Andika'] },
+                active: () => this.scene.start('Game'),
+                inactive: () => this.scene.start('Game')
+            });
+        } else {
+            // Fallback: proceed immediately if WebFont failed to load
+            this.scene.start('Game');
+        }
     }
 }

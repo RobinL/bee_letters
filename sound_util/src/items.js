@@ -3,6 +3,8 @@
 
 export const LETTER_ITEMS = {
     a: ['accordian', 'acorn', 'ant', 'arrow', 'astronaut'],
+    b: ['ball', 'banana', 'bear', 'bee', 'bird', 'boat', 'book', 'bus', 'butterfly'],
+    c: ['cake', 'car', 'castle', 'cat', 'clock', 'coat', 'cow', 'crayon', 'cup'],
 };
 
 // Generate flat array of items with paths

@@ -24,7 +24,10 @@ export default class Game extends Phaser.Scene {
         // Add garden background to the right side (items area)
         this.createGardenBackground(this.sidebarWidth, width, height);
 
-        // Step 3: Draw debug zone visualization
+        // Add flower background on the left side (flower area)
+        this.createFlowerBackground(this.sidebarWidth, height);
+
+        // Separator line between areas
         this.drawLayoutZones(this.sidebarWidth, width, height);
 
         // Step 4: Render the flower column
@@ -259,6 +262,12 @@ export default class Game extends Phaser.Scene {
         // Make the matched item fly a spirograph path around the flower
         this.startItemSpirograph(sprite, flower);
 
+        // Add a new item if any remain in the pool
+        this.spawnItemFromPool();
+
+        // Check if the game is complete
+        this.checkForCompletion();
+
         console.log('Correct! 🎉');
     }
 
@@ -298,17 +307,19 @@ export default class Game extends Phaser.Scene {
         gardenBg.setDepth(-1);
     }
 
-    drawLayoutZones(sidebarWidth, width, height) {
-        // Draw semi-transparent overlay on flower zone for debugging
-        const debugZone = this.add.rectangle(
-            sidebarWidth / 2,
-            height / 2,
-            sidebarWidth,
-            height,
-            0x90EE90, // Light green
-            0.2 // 20% opacity
-        );
+    createFlowerBackground(sidebarWidth, height) {
+        // Centered in the left column
+        const centerX = sidebarWidth / 2;
+        const centerY = height / 2;
 
+        const flowerBg = this.add.image(centerX, centerY, 'flower_bg');
+
+        // Stretch to fit the sidebar exactly (allow aspect ratio change)
+        flowerBg.setDisplaySize(sidebarWidth, height);
+        flowerBg.setDepth(-1);
+    }
+
+    drawLayoutZones(sidebarWidth, width, height) {
         // Draw separator line
         const graphics = this.add.graphics();
         graphics.lineStyle(3, 0x228B22, 1); // Forest green line
@@ -343,13 +354,15 @@ export default class Game extends Phaser.Scene {
 
             // Add letter text in center of flower
             const letterText = this.add.text(centerX, yPos, letters[i], {
-                fontSize: '48px',
-                fontFamily: 'Arial Black, Arial, sans-serif',
+                fontSize: '64px',
+                fontFamily: 'Andika, Arial, sans-serif',
                 fill: '#ffffff',
                 stroke: '#000000',
                 strokeThickness: 4
             });
             letterText.setOrigin(0.5, 0.5);
+            // Keep letters above all sprites and graphics
+            letterText.setDepth(1000);
 
             // Store flower data
             this.flowers.push({
@@ -363,13 +376,14 @@ export default class Game extends Phaser.Scene {
     }
 
     spawnItems(sidebarWidth, width, height) {
-        // Build item keys dynamically from LETTER_ITEMS config
-        const itemKeys = [];
+        // Build shuffled pool of items from current letters
+        const pool = [];
         Object.entries(LETTER_ITEMS).forEach(([letter, items]) => {
             items.forEach(itemName => {
-                itemKeys.push({ key: `${letter}_${itemName}`, letter });
+                pool.push({ key: `${letter}_${itemName}`, letter, name: itemName });
             });
         });
+        this.remainingItemPool = Phaser.Utils.Array.Shuffle(pool);
 
         // Calculate items area dimensions
         const itemsAreaWidth = width - sidebarWidth;
@@ -379,42 +393,90 @@ export default class Game extends Phaser.Scene {
         const horizontalMargin = itemsAreaWidth * 0.15; // 12.5% on each side = 75% in middle
         const verticalMargin = itemsAreaHeight * 0.35;   // 25% on each side = 50% in middle
 
-        // Define play zone boundaries
-        const minX = sidebarWidth + horizontalMargin;
-        const maxX = width - horizontalMargin;
-        const minY = verticalMargin;
-        const maxY = height - verticalMargin;
+        // Store spawn boundaries for later use when adding new items
+        this.spawnBounds = {
+            minX: sidebarWidth + horizontalMargin,
+            maxX: width - horizontalMargin,
+            minY: verticalMargin,
+            maxY: height - verticalMargin
+        };
 
         // Store item references
         this.items = [];
 
-        itemKeys.forEach(({ key, letter }) => {
-            // Generate random position in play zone
-            const x = Phaser.Math.Between(minX, maxX);
-            const y = Phaser.Math.Between(minY, maxY);
+        // Spawn initial batch (max 5 or pool size)
+        const initialCount = Math.min(5, this.remainingItemPool.length);
+        for (let i = 0; i < initialCount; i++) {
+            this.spawnItemFromPool();
+        }
+    }
 
-            // Create item sprite
-            const item = this.add.sprite(x, y, key);
+    playItemVoice(letter, name) {
+        const voiceKey = `voice_${letter}_${name}`;
+        if (this.sound) {
+            this.sound.play(voiceKey);
+        }
+    }
 
-            // Scale items to a reasonable size
-            const targetSize = 80;
-            const scale = targetSize / Math.max(item.width, item.height);
-            item.setScale(scale);
+    spawnItemFromPool() {
+        if (!this.remainingItemPool || this.remainingItemPool.length === 0) return;
+        if (!this.spawnBounds) return;
 
-            // Add slight random rotation for visual interest
-            item.setAngle(Phaser.Math.Between(-15, 15));
+        const nextItem = this.remainingItemPool.pop();
 
-            // Make item interactive and draggable
-            item.setInteractive({ draggable: true });
+        // Generate random position in play zone
+        const x = Phaser.Math.Between(this.spawnBounds.minX, this.spawnBounds.maxX);
+        const y = Phaser.Math.Between(this.spawnBounds.minY, this.spawnBounds.maxY);
 
-            this.items.push({
-                sprite: item,
-                key: key,
-                letter: letter, // Letter derived from LETTER_ITEMS
-                originalX: x,
-                originalY: y
-            });
+        // Create item sprite
+        const item = this.add.sprite(x, y, nextItem.key);
+
+        // Scale items to a reasonable size
+        const targetSize = 80;
+        const scale = targetSize / Math.max(item.width, item.height);
+        item.setScale(scale);
+
+        // Add slight random rotation for visual interest
+        item.setAngle(Phaser.Math.Between(-15, 15));
+
+        // Make item interactive and draggable
+        item.setInteractive({ draggable: true });
+        item.on('pointerdown', () => this.playItemVoice(nextItem.letter, nextItem.name));
+
+        this.items.push({
+            sprite: item,
+            key: nextItem.key,
+            letter: nextItem.letter,
+            name: nextItem.name,
+            originalX: x,
+            originalY: y
         });
+    }
+
+    checkForCompletion() {
+        if (this.gameComplete) return;
+
+        const noActiveItems = this.items.length === 0;
+        const noRemainingPool = !this.remainingItemPool || this.remainingItemPool.length === 0;
+
+        if (noActiveItems && noRemainingPool) {
+            this.gameComplete = true;
+            this.showCompletionMessage();
+        }
+    }
+
+    showCompletionMessage() {
+        const { width, height } = this.cameras.main;
+        const message = this.add.text(width / 2, height / 2, 'All items placed! Great job!', {
+            fontSize: '48px',
+            fontFamily: 'Arial Black, Arial, sans-serif',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 8,
+            align: 'center'
+        });
+        message.setOrigin(0.5);
+        message.setDepth(500);
     }
 
     startMusic() {
