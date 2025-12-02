@@ -588,13 +588,18 @@ export default class Game extends Phaser.Scene {
         // Store reference on item for cleanup and position sync
         item.glowEffect = glow;
 
-        // Add gentle pulsing animation
+        // Pulse from 0 up to a little larger than the sprite (capped at ~2x the sprite size)
+        const maxGlowScale = Math.min(
+            2,
+            (Math.max(item.displayWidth, item.displayHeight) * 2) / glowSize
+        );
+        glow.setScale(0);
         this.tweens.add({
             targets: glow,
-            scaleX: 1.35,
-            scaleY: 1.35,
+            scaleX: { from: 0.3, to: maxGlowScale },
+            scaleY: { from: 0.3, to: maxGlowScale },
             alpha: 0.7,
-            duration: 800,
+            duration: 1800,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut'
