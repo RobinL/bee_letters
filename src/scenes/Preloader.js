@@ -33,6 +33,11 @@ export default class Preloader extends Phaser.Scene {
             });
         });
 
+        // Load standalone alphabet letter voices (a, b, c, ...)
+        'abcdefghijklmnopqrstuvwxyz'.split('').forEach(letter => {
+            this.load.audio(`voice_letter_${letter}`, `assets/voice/alphabet/${letter}.webm`);
+        });
+
         // Load bee sprites
         this.load.image('bee_1', 'assets/bees/bee_1.png');
         this.load.image('bee_2', 'assets/bees/bee_2.png');

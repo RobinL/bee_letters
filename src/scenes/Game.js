@@ -8,7 +8,8 @@ import {
     SPIRO_VARIATION,
     SPIRO_SPEED,
     LETTER_ITEMS,
-    MUSIC_DEFAULT_VOLUME
+    MUSIC_DEFAULT_VOLUME,
+    VOICE_DEFAULT_VOLUME
 } from '../config.js';
 
 export default class Game extends Phaser.Scene {
@@ -427,10 +428,24 @@ export default class Game extends Phaser.Scene {
     }
 
     playItemVoice(letter, name) {
-        const voiceKey = `voice_${letter}_${name}`;
-        if (this.sound) {
-            this.sound.play(voiceKey);
-        }
+        if (!this.sound) return;
+
+        const letterKey = `voice_letter_${letter}`;
+        const wordKey = `voice_${letter}_${name}`;
+
+        const letterSound = this.sound.add(letterKey, { volume: VOICE_DEFAULT_VOLUME });
+        const wordSound = this.sound.add(wordKey, { volume: VOICE_DEFAULT_VOLUME });
+
+        letterSound.once('complete', () => {
+            letterSound.destroy();
+            wordSound.play();
+        });
+
+        wordSound.once('complete', () => {
+            wordSound.destroy();
+        });
+
+        letterSound.play();
     }
 
     spawnItemFromPool() {

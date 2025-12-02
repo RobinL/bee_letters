@@ -28,7 +28,9 @@ export const SPIRO_VARIATION = 0.55;  // +/- 15% variation
 export const SPIRO_SPEED = 0.04; // Animation speed (radians per frame)
 
 // ----- Music Settings -----
-export const MUSIC_DEFAULT_VOLUME = 0.3;  // Default volume (0-1), 30% is a nice low level
+export const MUSIC_DEFAULT_VOLUME = 0.25;  // Default volume (0-1), 30% is a nice low level
+// Speech should sit clearly above background music
+export const VOICE_DEFAULT_VOLUME = 0.7;
 
 // ----- Letter Items -----
 // Maps each letter to an array of item image names (without .png extension)
