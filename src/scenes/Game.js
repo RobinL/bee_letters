@@ -369,13 +369,19 @@ export default class Game extends Phaser.Scene {
             });
         });
 
-        const padding = 60;
+        // Calculate items area dimensions
+        const itemsAreaWidth = width - sidebarWidth;
+        const itemsAreaHeight = height;
+
+        // Place items in middle 75% horizontally and middle 50% vertically
+        const horizontalMargin = itemsAreaWidth * 0.15; // 12.5% on each side = 75% in middle
+        const verticalMargin = itemsAreaHeight * 0.35;   // 25% on each side = 50% in middle
 
         // Define play zone boundaries
-        const minX = sidebarWidth + padding;
-        const maxX = width - padding;
-        const minY = padding;
-        const maxY = height - padding;
+        const minX = sidebarWidth + horizontalMargin;
+        const maxX = width - horizontalMargin;
+        const minY = verticalMargin;
+        const maxY = height - verticalMargin;
 
         // Store item references
         this.items = [];
