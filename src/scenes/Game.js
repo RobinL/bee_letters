@@ -7,7 +7,8 @@ import {
     PETAL_PRESETS,
     SPIRO_VARIATION,
     SPIRO_SPEED,
-    LETTER_ITEMS
+    LETTER_ITEMS,
+    MUSIC_DEFAULT_VOLUME
 } from '../config.js';
 
 export default class Game extends Phaser.Scene {
@@ -19,6 +20,9 @@ export default class Game extends Phaser.Scene {
     create() {
         const { width, height } = this.cameras.main;
         this.sidebarWidth = width * SIDEBAR_RATIO;
+
+        // Add garden background to the right side (items area)
+        this.createGardenBackground(this.sidebarWidth, width, height);
 
         // Step 3: Draw debug zone visualization
         this.drawLayoutZones(this.sidebarWidth, width, height);
@@ -38,6 +42,12 @@ export default class Game extends Phaser.Scene {
 
         // Store trail points for fading effect
         this.trailPoints = [];
+
+        // Start background music
+        this.startMusic();
+
+        // Create volume slider UI
+        this.createVolumeSlider(width, height);
     }
 
     update(time, delta) {
@@ -269,6 +279,23 @@ export default class Game extends Phaser.Scene {
         console.log('Try again!');
     }
 
+    createGardenBackground(sidebarWidth, width, height) {
+        // Calculate the play area dimensions (right side)
+        const playAreaWidth = width - sidebarWidth;
+        const playAreaCenterX = sidebarWidth + playAreaWidth / 2;
+
+        // Add garden background image - dimensions match exactly now
+        const gardenBg = this.add.image(playAreaCenterX, height / 2, 'garden_bg');
+
+        // Scale to fit the play area exactly
+        const scaleX = playAreaWidth / gardenBg.width;
+        const scaleY = height / gardenBg.height;
+        gardenBg.setScale(scaleX, scaleY);
+
+        // Set depth to ensure it's behind other elements
+        gardenBg.setDepth(-1);
+    }
+
     drawLayoutZones(sidebarWidth, width, height) {
         // Draw semi-transparent overlay on flower zone for debugging
         const debugZone = this.add.rectangle(
@@ -298,17 +325,17 @@ export default class Game extends Phaser.Scene {
         this.flowers = [];
 
         for (let i = 0; i < 3; i++) {
-            // Position at 25%, 50%, 75% of height
-            const yPos = height * (0.25 + i * 0.25);
 
-            // Pick a random flower head
-            const flowerKey = Phaser.Utils.Array.GetRandom(flowerKeys);
+            const yPos = height * (0.20 + i * 0.30);
+
+            // Use flower heads in fixed order (1, 2, 3 from top to bottom)
+            const flowerKey = flowerKeys[i];
 
             // Create flower sprite
             const flower = this.add.sprite(centerX, yPos, flowerKey);
 
-            // Scale flower to fit nicely in the sidebar (smaller size)
-            const targetSize = sidebarWidth * 0.5;
+            // Scale flower to fit nicely in the sidebar (25% smaller than before)
+            const targetSize = sidebarWidth * 0.375;
             const scale = targetSize / Math.max(flower.width, flower.height);
             flower.setScale(scale);
 
@@ -380,5 +407,125 @@ export default class Game extends Phaser.Scene {
                 originalY: y
             });
         });
+    }
+
+    startMusic() {
+        // Start background music at low volume, looping
+        this.music = this.sound.add('music', {
+            volume: MUSIC_DEFAULT_VOLUME,
+            loop: true
+        });
+        this.music.play();
+    }
+
+    createVolumeSlider(width, height) {
+        const sliderX = width - 100;
+        const sliderY = 30;
+        const sliderWidth = 80;
+        const sliderHeight = 8;
+
+        // Volume icon (speaker emoji as text)
+        this.volumeIcon = this.add.text(sliderX - 30, sliderY, '🔊', {
+            fontSize: '20px'
+        });
+        this.volumeIcon.setOrigin(0.5, 0.5);
+        this.volumeIcon.setDepth(200);
+        this.volumeIcon.setInteractive({ useHandCursor: true });
+
+        // Click icon to mute/unmute
+        this.volumeIcon.on('pointerdown', () => {
+            if (this.music.volume > 0) {
+                this.lastVolume = this.music.volume;
+                this.music.setVolume(0);
+                this.volumeIcon.setText('🔇');
+                this.updateSliderKnob(0);
+            } else {
+                const vol = this.lastVolume || MUSIC_DEFAULT_VOLUME;
+                this.music.setVolume(vol);
+                this.volumeIcon.setText('🔊');
+                this.updateSliderKnob(vol);
+            }
+        });
+
+        // Slider background (track)
+        this.sliderTrack = this.add.rectangle(
+            sliderX + sliderWidth / 2,
+            sliderY,
+            sliderWidth,
+            sliderHeight,
+            0x444444,
+            0.8
+        );
+        this.sliderTrack.setDepth(200);
+
+        // Slider fill (shows current volume)
+        this.sliderFill = this.add.rectangle(
+            sliderX,
+            sliderY,
+            sliderWidth * MUSIC_DEFAULT_VOLUME,
+            sliderHeight,
+            0x4ecdc4,
+            1
+        );
+        this.sliderFill.setOrigin(0, 0.5);
+        this.sliderFill.setDepth(201);
+
+        // Slider knob
+        this.sliderKnob = this.add.circle(
+            sliderX + sliderWidth * MUSIC_DEFAULT_VOLUME,
+            sliderY,
+            10,
+            0xffffff,
+            1
+        );
+        this.sliderKnob.setDepth(202);
+        this.sliderKnob.setInteractive({ useHandCursor: true, draggable: true });
+
+        // Store slider bounds for drag calculation
+        this.sliderBounds = {
+            x: sliderX,
+            width: sliderWidth
+        };
+
+        // Handle knob drag
+        this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+            if (gameObject === this.sliderKnob) {
+                // Clamp to slider bounds
+                const minX = this.sliderBounds.x;
+                const maxX = this.sliderBounds.x + this.sliderBounds.width;
+                const clampedX = Phaser.Math.Clamp(dragX, minX, maxX);
+
+                // Update knob position
+                this.sliderKnob.x = clampedX;
+
+                // Calculate volume (0-1)
+                const volume = (clampedX - minX) / this.sliderBounds.width;
+
+                // Update fill width
+                this.sliderFill.width = this.sliderBounds.width * volume;
+
+                // Set music volume
+                this.music.setVolume(volume);
+
+                // Update icon
+                this.volumeIcon.setText(volume > 0 ? '🔊' : '🔇');
+            }
+        });
+
+        // Click on track to set volume
+        this.sliderTrack.setInteractive({ useHandCursor: true });
+        this.sliderTrack.on('pointerdown', (pointer) => {
+            const volume = (pointer.x - this.sliderBounds.x) / this.sliderBounds.width;
+            const clampedVolume = Phaser.Math.Clamp(volume, 0, 1);
+
+            this.music.setVolume(clampedVolume);
+            this.updateSliderKnob(clampedVolume);
+            this.volumeIcon.setText(clampedVolume > 0 ? '🔊' : '🔇');
+        });
+    }
+
+    updateSliderKnob(volume) {
+        this.sliderKnob.x = this.sliderBounds.x + this.sliderBounds.width * volume;
+        this.sliderFill.width = this.sliderBounds.width * volume;
     }
 }

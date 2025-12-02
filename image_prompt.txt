@@ -1,0 +1,8 @@
+square 3x3 grid (9 images total) of pictures in this style for a book to learn the alphabet
+
+Each image is on a plain white background
+No visible borders, frames, outlines, grid lines, drop-shadows, or separators.
+Each tile must be exactly the same size.
+Every tile must have a pure white (#FFFFFF) background, with the subject centred.
+
+All the images are items starting with the letter b, bee, bus and so on

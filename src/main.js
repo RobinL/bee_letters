@@ -5,8 +5,8 @@ import Game from './scenes/Game.js';
 const config = {
     type: Phaser.AUTO,
     parent: 'game-container',
-    width: 1280,
-    height: 720,
+    width: 1792,  // Calculated so items area (75%) = 1344px matches garden.png width
+    height: 768,  // Matches garden.png height
     backgroundColor: '#87CEEB', // Sky blue background
     scale: {
         mode: Phaser.Scale.FIT,
