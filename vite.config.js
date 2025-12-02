@@ -62,7 +62,7 @@ function letterManifestPlugin() {
 }
 
 export default defineConfig({
-    base: './',
+    base: '/bee_letters/',
     server: {
         port: 3000,
         open: true
