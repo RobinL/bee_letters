@@ -8,7 +8,7 @@ export const DROP_DISTANCE = 80;    // How close item needs to be to flower cent
 
 // ----- Bee & Trail Settings -----
 export const BEE_FLIGHT_DURATION = 18000;   // How long the bee flies (ms)
-export const TRAIL_PERSISTENCE = 3000;      // How long trail takes to fade (ms)
+export const TRAIL_PERSISTENCE = 50000;      // How long trail takes to fade (ms)
 
 // ----- Spirograph Pattern -----
 // Petal-like patterns work best when (R-r)/r produces nice integer ratios
@@ -23,7 +23,7 @@ export const PETAL_PRESETS = [
 ];
 
 // Variation range (multiplier applied to preset values)
-export const SPIRO_VARIATION = 0.15;  // +/- 15% variation
+export const SPIRO_VARIATION = 0.55;  // +/- 15% variation
 
 export const SPIRO_SPEED = 0.04; // Animation speed (radians per frame)
 

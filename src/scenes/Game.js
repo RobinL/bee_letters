@@ -164,6 +164,8 @@ export default class Game extends Phaser.Scene {
             orbitData.angle
         );
         sprite.setDepth(50);
+        // Shrink the orbiting item to roughly one third of its displayed size
+        sprite.setScale(sprite.scaleX * 0.5, sprite.scaleY * 0.5);
         sprite.x = startPoint.x;
         sprite.y = startPoint.y;
 
