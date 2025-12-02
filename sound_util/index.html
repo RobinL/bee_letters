@@ -29,6 +29,41 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
+        .mode-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-button {
+            padding: 12px 16px;
+            background: #f2f4ff;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #4a4a6a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-button:hover {
+            background: #e8ebff;
+        }
+
+        .mode-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #5b6fd1;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+        }
+
+        .mode-description {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.5;
+        }
+
         .container {
             background: white;
             border-radius: 20px;
@@ -288,6 +323,14 @@
     <h1>🎤 Sound Recording Utility</h1>
 
     <div class="container">
+        <div class="mode-switch" aria-label="Select recording list">
+            <button class="mode-button active" id="btnModeWords" data-mode="words">Words</button>
+            <button class="mode-button" id="btnModeLetters" data-mode="letters">Letters</button>
+        </div>
+        <div class="mode-description" id="modeDescription">
+            Record the spoken words for each picture used in the game.
+        </div>
+
         <div class="progress-text" id="progressText">0 / 0 recorded</div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>

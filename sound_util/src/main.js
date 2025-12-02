@@ -1,10 +1,64 @@
 import JSZip from 'jszip';
-import { getItemList, getItemCount } from './items.js';
+import { getLetterSoundList, getWordItemList } from './items.js';
+
+// Helpers to decorate item data for UI and recording management
+function decorateItems(rawItems, datasetKey) {
+    return rawItems.map(item => {
+        const recordingKey = `${datasetKey}:${item.letter}:${item.name}`;
+        const downloadFileName = item.downloadPath.split('/').pop();
+        const isLetterList = datasetKey === 'letters';
+
+        return {
+            ...item,
+            datasetKey,
+            recordingKey,
+            downloadFileName,
+            displayName: isLetterList ? `Letter "${item.letter.toUpperCase()}"` : item.name,
+            listLabel: isLetterList
+                ? `${item.letter.toUpperCase()} - Letter`
+                : `${item.letter.toUpperCase()} - ${item.name}`
+        };
+    });
+}
+
+function buildDataset(key, label, description, rawItems) {
+    return {
+        key,
+        label,
+        description,
+        items: decorateItems(rawItems, key)
+    };
+}
+
+const datasets = {
+    words: buildDataset(
+        'words',
+        'Words',
+        'Record the spoken words for each picture used in the game.',
+        getWordItemList()
+    ),
+    letters: buildDataset(
+        'letters',
+        'Letters',
+        'Record the standalone letter sounds (a.webm, b.webm, ...).',
+        getLetterSoundList()
+    )
+};
+
+function buildItemLookup() {
+    const map = new Map();
+    Object.values(datasets).forEach(dataset => {
+        dataset.items.forEach(item => map.set(item.recordingKey, item));
+    });
+    return map;
+}
 
 // State
-let items = [];
+let activeDatasetKey = 'words';
+let items = datasets[activeDatasetKey].items;
 let currentIndex = 0;
-let recordings = new Map(); // Map<itemName, Blob>
+let recordings = new Map(); // Map<recordingKey, Blob>
+let itemLookup = buildItemLookup(); // Map<recordingKey, item>
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
@@ -14,6 +68,9 @@ let currentAudio = null;
 const elements = {
     progressText: document.getElementById('progressText'),
     progressFill: document.getElementById('progressFill'),
+    btnModeWords: document.getElementById('btnModeWords'),
+    btnModeLetters: document.getElementById('btnModeLetters'),
+    modeDescription: document.getElementById('modeDescription'),
     itemImage: document.getElementById('itemImage'),
     itemName: document.getElementById('itemName'),
     itemLetter: document.getElementById('itemLetter'),
@@ -30,14 +87,14 @@ const elements = {
 
 // Initialize
 async function init() {
-    items = getItemList();
-
     if (items.length === 0) {
         elements.itemName.textContent = 'No items found!';
         return;
     }
 
     // Setup event listeners
+    elements.btnModeWords.addEventListener('click', () => switchDataset('words'));
+    elements.btnModeLetters.addEventListener('click', () => switchDataset('letters'));
     elements.btnRecord.addEventListener('click', startRecording);
     elements.btnStop.addEventListener('click', stopRecording);
     elements.btnPlay.addEventListener('click', playRecording);
@@ -58,25 +115,35 @@ async function init() {
     }
 
     // Display first item
+    updateModeButtons();
     updateDisplay();
     renderItemList();
 }
 
 function updateDisplay() {
+    if (!items.length) {
+        elements.itemName.textContent = 'No items found!';
+        return;
+    }
+
+    updateModeButtons();
+
     const item = items[currentIndex];
 
     // Update image and name
     elements.itemImage.src = item.imagePath;
-    elements.itemImage.alt = item.name;
-    elements.itemName.textContent = item.name;
-    elements.itemLetter.textContent = `Letter: ${item.letter.toUpperCase()}`;
+    elements.itemImage.alt = item.displayName;
+    elements.itemName.textContent = item.displayName;
+    elements.itemLetter.textContent = item.datasetKey === 'letters'
+        ? `Saves as: ${item.downloadFileName}`
+        : `Letter: ${item.letter.toUpperCase()}`;
 
     // Update navigation buttons
     elements.btnPrev.disabled = currentIndex === 0;
     elements.btnNext.disabled = currentIndex === items.length - 1;
 
     // Update status based on recording state
-    const hasRecording = recordings.has(item.name);
+    const hasRecording = recordings.has(item.recordingKey);
     if (isRecording) {
         elements.status.innerHTML = '<span class="recording-indicator"></span>Recording...';
         elements.status.className = 'status recording';
@@ -100,11 +167,11 @@ function updateDisplay() {
 }
 
 function updateProgress() {
-    const recorded = recordings.size;
+    const recorded = items.filter(item => recordings.has(item.recordingKey)).length;
     const total = items.length;
     const percent = total > 0 ? (recorded / total) * 100 : 0;
 
-    elements.progressText.textContent = `${recorded} / ${total} recorded`;
+    elements.progressText.textContent = `${recorded} / ${total} recorded (${datasets[activeDatasetKey].label})`;
     elements.progressFill.style.width = `${percent}%`;
 
     // Enable bulk download if any recordings exist
@@ -113,13 +180,13 @@ function updateProgress() {
 
 function renderItemList() {
     elements.itemList.innerHTML = items.map((item, index) => {
-        const isRecorded = recordings.has(item.name);
+        const isRecorded = recordings.has(item.recordingKey);
         const isCurrent = index === currentIndex;
 
         return `
             <div class="item-list-item ${isCurrent ? 'current' : ''} ${isRecorded ? 'recorded' : ''}"
                  data-index="${index}">
-                <span>${item.letter.toUpperCase()} - ${item.name}</span>
+                <span>${item.listLabel}</span>
                 <span class="checkmark">${isRecorded ? '✓' : ''}</span>
             </div>
         `;
@@ -134,10 +201,33 @@ function renderItemList() {
     });
 }
 
+function updateModeButtons() {
+    const dataset = datasets[activeDatasetKey];
+    elements.btnModeWords.classList.toggle('active', activeDatasetKey === 'words');
+    elements.btnModeLetters.classList.toggle('active', activeDatasetKey === 'letters');
+    elements.modeDescription.textContent = dataset.description;
+}
+
+function switchDataset(datasetKey) {
+    if (datasetKey === activeDatasetKey || !datasets[datasetKey]) return;
+    if (isRecording) {
+        alert('Stop recording before switching lists.');
+        return;
+    }
+
+    stopPlayback();
+
+    activeDatasetKey = datasetKey;
+    items = datasets[activeDatasetKey].items;
+    currentIndex = 0;
+    updateDisplay();
+}
+
 function navigate(direction) {
     const newIndex = currentIndex + direction;
     if (newIndex >= 0 && newIndex < items.length) {
         currentIndex = newIndex;
+        stopPlayback();
         updateDisplay();
     }
 }
@@ -146,6 +236,7 @@ async function startRecording() {
     const item = items[currentIndex];
 
     try {
+        stopPlayback();
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // Determine best supported format
@@ -168,7 +259,7 @@ async function startRecording() {
 
         mediaRecorder.onstop = () => {
             const blob = new Blob(audioChunks, { type: mimeType });
-            recordings.set(item.name, blob);
+            recordings.set(item.recordingKey, blob);
 
             // Stop all tracks
             stream.getTracks().forEach(track => track.stop());
@@ -203,17 +294,21 @@ function stopRecording() {
     elements.btnStop.disabled = true;
 }
 
-function playRecording() {
-    const item = items[currentIndex];
-    const blob = recordings.get(item.name);
-
-    if (!blob) return;
-
-    // Stop any currently playing audio
+function stopPlayback() {
     if (currentAudio) {
         currentAudio.pause();
         currentAudio = null;
     }
+}
+
+function playRecording() {
+    const item = items[currentIndex];
+    const blob = recordings.get(item.recordingKey);
+
+    if (!blob) return;
+
+    // Stop any currently playing audio
+    stopPlayback();
 
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
@@ -226,11 +321,11 @@ function playRecording() {
 
 function downloadCurrent() {
     const item = items[currentIndex];
-    const blob = recordings.get(item.name);
+    const blob = recordings.get(item.recordingKey);
 
     if (!blob) return;
 
-    downloadBlob(blob, `${item.name}.webm`);
+    downloadBlob(blob, item.downloadFileName);
 }
 
 function downloadBlob(blob, filename) {
@@ -253,12 +348,10 @@ async function downloadAll() {
     try {
         const zip = new JSZip();
 
-        // Organize by letter
-        recordings.forEach((blob, itemName) => {
-            // Find the item to get its letter
-            const item = items.find(i => i.name === itemName);
+        recordings.forEach((blob, recordingKey) => {
+            const item = itemLookup.get(recordingKey);
             if (item) {
-                zip.file(`${item.letter}/${itemName}.webm`, blob);
+                zip.file(item.downloadPath, blob);
             }
         });
 
