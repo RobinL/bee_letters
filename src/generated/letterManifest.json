@@ -89,6 +89,35 @@
       "cow",
       "crayon",
       "cup"
+    ],
+    "d": [
+      "dog",
+      "drum"
+    ],
+    "e": [
+      "eagle",
+      "ear",
+      "egg",
+      "elephant"
+    ],
+    "f": [
+      "feather",
+      "fence",
+      "fish",
+      "flower",
+      "foot",
+      "fork",
+      "fox",
+      "frog"
+    ],
+    "g": [
+      "garden",
+      "ghost",
+      "giraffe",
+      "gloves",
+      "goat",
+      "grapes",
+      "guitar"
     ]
   }
 }

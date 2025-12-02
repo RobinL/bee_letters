@@ -12,6 +12,12 @@ const config = {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
+    input: {
+        // Capture touch events so the browser doesn't swallow drags on mobile
+        touch: { capture: true },
+        mouse: { preventDefaultDown: true },
+        activePointers: 3
+    },
     scene: [Preloader, Game]
 };
 
