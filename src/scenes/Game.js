@@ -14,7 +14,7 @@ import {
 export default class Game extends Phaser.Scene {
     constructor() {
         super('Game');
-        this.activeBees = []; // Track active bee animations
+        this.activeOrbiters = []; // Track item spirograph animations
     }
 
     create() {
@@ -51,51 +51,57 @@ export default class Game extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // Update all active bee animations
-        this.activeBees.forEach(beeData => {
-            this.updateBeeSpirograph(beeData, delta);
+        // Update all active spirograph animations
+        this.activeOrbiters.forEach(orbitData => {
+            this.updateOrbitingItem(orbitData, delta);
         });
 
         // Draw and fade trails
         this.drawTrails(delta);
     }
 
-    updateBeeSpirograph(beeData, delta) {
+    updateOrbitingItem(orbitData, delta) {
         // Increment angle
-        beeData.angle += SPIRO_SPEED;
+        orbitData.angle += SPIRO_SPEED;
 
-        // Spirograph formula
-        // x = (R - r) * cos(t) + d * cos((R - r) / r * t)
-        // y = (R - r) * sin(t) + d * sin((R - r) / r * t)
-        const t = beeData.angle;
-        const R = beeData.spiroR;
-        const r = beeData.spiroR_inner;
-        const d = beeData.spiroD;
-
-        const x = beeData.centerX + (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
-        const y = beeData.centerY + (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
+        const { x, y } = this.calculateSpirographPoint(
+            orbitData.centerX,
+            orbitData.centerY,
+            orbitData.spiroR,
+            orbitData.spiroR_inner,
+            orbitData.spiroD,
+            orbitData.angle
+        );
 
         // Store previous position for trail (use lastX/lastY from previous frame)
-        if (beeData.lastX !== undefined && beeData.lastY !== undefined) {
+        if (orbitData.lastX !== undefined && orbitData.lastY !== undefined) {
             this.trailPoints.push({
-                x1: beeData.lastX,
-                y1: beeData.lastY,
+                x1: orbitData.lastX,
+                y1: orbitData.lastY,
                 x2: x,
                 y2: y,
                 alpha: 1,
-                color: beeData.trailColor
+                color: orbitData.trailColor
             });
         }
 
-        // Update bee position
-        beeData.bee.x = x;
-        beeData.bee.y = y;
+        // Update sprite position
+        orbitData.sprite.x = x;
+        orbitData.sprite.y = y;
 
         // Store current position for next frame's trail
-        beeData.lastX = x;
-        beeData.lastY = y;
+        orbitData.lastX = x;
+        orbitData.lastY = y;
+    }
 
-        // No rotation - keep bee upright
+    calculateSpirographPoint(centerX, centerY, R, r, d, t) {
+        // Spirograph formula
+        // x = (R - r) * cos(t) + d * cos((R - r) / r * t)
+        // y = (R - r) * sin(t) + d * sin((R - r) / r * t)
+        return {
+            x: centerX + (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t),
+            y: centerY + (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t)
+        };
     }
 
     drawTrails(delta) {
@@ -121,16 +127,7 @@ export default class Game extends Phaser.Scene {
         });
     }
 
-    spawnBeeSpirograph(flower) {
-        // Pick a random bee
-        const beeKey = Phaser.Utils.Array.GetRandom(['bee_1', 'bee_2']);
-        const bee = this.add.sprite(flower.x, flower.y, beeKey);
-
-        // Scale bee to a nice size
-        const targetSize = 40;
-        const scale = targetSize / Math.max(bee.width, bee.height);
-        bee.setScale(scale);
-
+    startItemSpirograph(sprite, flower) {
         // Random trail color (bright, cheerful colors)
         const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da];
         const trailColor = Phaser.Utils.Array.GetRandom(colors);
@@ -142,37 +139,50 @@ export default class Game extends Phaser.Scene {
             return value * variation;
         };
 
-        // Create bee data object with unique spirograph parameters
-        const beeData = {
-            bee: bee,
+        // Create data object with unique spirograph parameters
+        const orbitData = {
+            sprite,
             centerX: flower.x,
             centerY: flower.y,
-            angle: 0,
+            angle: Phaser.Math.FloatBetween(0, Math.PI * 2),
             trailColor: trailColor,
             lastX: undefined,
             lastY: undefined,
-            // Unique spirograph parameters for this bee
+            // Unique spirograph parameters for this item
             spiroR: vary(preset.R),
             spiroR_inner: vary(preset.r),
             spiroD: vary(preset.d)
         };
 
-        this.activeBees.push(beeData);
+        // Place sprite at its starting point and render above other items
+        const startPoint = this.calculateSpirographPoint(
+            orbitData.centerX,
+            orbitData.centerY,
+            orbitData.spiroR,
+            orbitData.spiroR_inner,
+            orbitData.spiroD,
+            orbitData.angle
+        );
+        sprite.setDepth(50);
+        sprite.x = startPoint.x;
+        sprite.y = startPoint.y;
 
-        // Remove bee after duration
+        this.activeOrbiters.push(orbitData);
+
+        // Remove item after duration
         this.time.delayedCall(BEE_FLIGHT_DURATION, () => {
-            // Fade out bee
+            // Fade out item
             this.tweens.add({
-                targets: bee,
+                targets: sprite,
                 alpha: 0,
                 scale: 0,
                 duration: 500,
                 ease: 'Power2',
                 onComplete: () => {
-                    bee.destroy();
-                    const index = this.activeBees.indexOf(beeData);
+                    sprite.destroy();
+                    const index = this.activeOrbiters.indexOf(orbitData);
                     if (index > -1) {
-                        this.activeBees.splice(index, 1);
+                        this.activeOrbiters.splice(index, 1);
                     }
                 }
             });
@@ -229,24 +239,14 @@ export default class Game extends Phaser.Scene {
     }
 
     onCorrectMatch(sprite, flower, itemData) {
-        // Visual feedback for correct match
-        this.tweens.add({
-            targets: sprite,
-            x: flower.x,
-            y: flower.y,
-            scale: 0,
-            alpha: 0,
-            duration: 300,
-            ease: 'Power2',
-            onComplete: () => {
-                sprite.destroy();
-                // Remove from items array
-                const index = this.items.indexOf(itemData);
-                if (index > -1) {
-                    this.items.splice(index, 1);
-                }
-            }
-        });
+        // Remove from items list and prevent further dragging
+        const index = this.items.indexOf(itemData);
+        if (index > -1) {
+            this.items.splice(index, 1);
+        }
+        sprite.disableInteractive();
+        sprite.clearTint();
+        sprite.setAngle(0);
 
         // Flash the flower green
         flower.sprite.setTint(0x00ff00);
@@ -254,8 +254,8 @@ export default class Game extends Phaser.Scene {
             flower.sprite.clearTint();
         });
 
-        // Spawn bee with spirograph animation!
-        this.spawnBeeSpirograph(flower);
+        // Make the matched item fly a spirograph path around the flower
+        this.startItemSpirograph(sprite, flower);
 
         console.log('Correct! 🎉');
     }
