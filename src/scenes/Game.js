@@ -489,15 +489,14 @@ export default class Game extends Phaser.Scene {
 
         const nextItem = this.remainingItemPool.pop();
 
-        // Generate random position in play zone
-        const x = Phaser.Math.Between(this.spawnBounds.minX, this.spawnBounds.maxX);
-        const y = Phaser.Math.Between(this.spawnBounds.minY, this.spawnBounds.maxY);
+        // Generate a non-overlapping random position in play zone
+        const targetSize = 130; // 50% bigger than before
+        const { x, y } = this.findSpawnPosition(targetSize);
 
         // Create item sprite
         const item = this.add.sprite(x, y, nextItem.key);
 
         // Scale items to a reasonable size
-        const targetSize = 80;
         const scale = targetSize / Math.max(item.width, item.height);
         item.setScale(scale);
 
@@ -519,6 +518,36 @@ export default class Game extends Phaser.Scene {
             originalX: x,
             originalY: y
         });
+    }
+
+    findSpawnPosition(targetSize) {
+        const { minX, maxX, minY, maxY } = this.spawnBounds;
+
+        const candidateRadius = targetSize / 2;
+        const buffer = 12; // Extra breathing room between items
+        let fallback = {
+            x: Phaser.Math.Between(minX, maxX),
+            y: Phaser.Math.Between(minY, maxY)
+        };
+
+        for (let i = 0; i < 40; i++) {
+            const x = Phaser.Math.Between(minX, maxX);
+            const y = Phaser.Math.Between(minY, maxY);
+            fallback = { x, y };
+
+            const tooClose = this.items.some(({ sprite }) => {
+                const otherRadius = Math.max(sprite.displayWidth, sprite.displayHeight) / 2;
+                const minDistance = candidateRadius + otherRadius + buffer;
+                return Phaser.Math.Distance.Between(x, y, sprite.x, sprite.y) < minDistance;
+            });
+
+            if (!tooClose) {
+                return { x, y };
+            }
+        }
+
+        // If we couldn't find a perfect spot, fall back to the last candidate
+        return fallback;
     }
 
     checkForCompletion() {
