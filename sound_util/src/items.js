@@ -1,11 +1,8 @@
 // Item lists for the sound recording utility.
-// Words mirror LETTER_ITEMS from the main game's config.js.
+// Derived from the generated manifest (kept in sync with the main game assets).
+import letterManifest from '../../src/generated/letterManifest.json';
 
-const WORD_ITEMS = {
-    a: ['accordian', 'acorn', 'ant', 'arrow', 'astronaut'],
-    b: ['ball', 'banana', 'bear', 'bee', 'bird', 'boat', 'book', 'bus', 'butterfly'],
-    c: ['cake', 'car', 'castle', 'cat', 'clock', 'coat', 'cow', 'crayon', 'cup'],
-};
+const WORD_ITEMS = (letterManifest && letterManifest.items) ? letterManifest.items : {};
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
 

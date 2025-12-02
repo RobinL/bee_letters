@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { LETTER_ITEMS } from '../config.js';
+import { LETTER_ITEMS, LETTER_ITEM_VOICES } from '../config.js';
 
 export default class Preloader extends Phaser.Scene {
     constructor() {
@@ -17,24 +17,41 @@ export default class Preloader extends Phaser.Scene {
         });
         loadingText.setOrigin(0.5, 0.5);
 
+        const allLetters = Object.keys(LETTER_ITEMS);
+        const shuffledLetters = Phaser.Utils.Array.Shuffle([...allLetters]);
+        const letterCount = Math.min(3, shuffledLetters.length);
+        this.activeLetters = shuffledLetters.slice(0, letterCount);
+
+        if (this.activeLetters.length === 0) {
+            loadingText.setText('No letter items found');
+            return;
+        }
+
+        // Persist chosen letters so the Game scene can reuse them
+        this.registry.set('activeLetters', this.activeLetters);
+
         // Load flower heads
         this.load.image('flower_head_1', 'assets/flower/flower_head_1.png');
         this.load.image('flower_head_2', 'assets/flower/flower_head_2.png');
         this.load.image('flower_head_3', 'assets/flower/flower_head_3.png');
 
         // Load item sprites dynamically from LETTER_ITEMS config
-        Object.entries(LETTER_ITEMS).forEach(([letter, items]) => {
+        this.activeLetters.forEach(letter => {
+            const items = LETTER_ITEMS[letter] || [];
             items.forEach(itemName => {
                 const key = `${letter}_${itemName}`;
                 const path = `assets/items/${letter}/${itemName}.png`;
                 this.load.image(key, path);
-                // Load matching voice clip
+            });
+
+            const voicedItems = LETTER_ITEM_VOICES[letter] || [];
+            voicedItems.forEach(itemName => {
                 this.load.audio(`voice_${letter}_${itemName}`, `assets/voice/${letter}/${itemName}.webm`);
             });
         });
 
         // Load standalone alphabet letter voices (a, b, c, ...)
-        'abcdefghijklmnopqrstuvwxyz'.split('').forEach(letter => {
+        this.activeLetters.forEach(letter => {
             this.load.audio(`voice_letter_${letter}`, `assets/voice/alphabet/${letter}.webm`);
         });
 

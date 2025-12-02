@@ -1,3 +1,7 @@
+import letterManifest from './generated/letterManifest.json';
+
+const manifest = letterManifest || { items: {}, itemVoices: {} };
+
 // ===========================================
 // GAME CONFIGURATION
 // ===========================================
@@ -33,10 +37,6 @@ export const MUSIC_DEFAULT_VOLUME = 0.25;  // Default volume (0-1), 30% is a nic
 export const VOICE_DEFAULT_VOLUME = 0.7;
 
 // ----- Letter Items -----
-// Maps each letter to an array of item image names (without .png extension)
-// Items should be in public/assets/items/{letter}/{itemName}.png
-export const LETTER_ITEMS = {
-    a: ['accordian', 'acorn', 'ant', 'arrow', 'astronaut'],
-    b: ['ball', 'banana', 'bear', 'bee', 'bird', 'boat', 'book', 'bus', 'butterfly'],
-    c: ['cake', 'car', 'castle', 'cat', 'clock', 'coat', 'cow', 'crayon', 'cup'],
-};
+// Generated at dev/build time from public/assets/items and public/assets/voice
+export const LETTER_ITEMS = manifest.items || {};
+export const LETTER_ITEM_VOICES = manifest.itemVoices || {};

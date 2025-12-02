@@ -20,6 +20,19 @@ export default class Game extends Phaser.Scene {
 
     create() {
         const { width, height } = this.cameras.main;
+        const savedLetters = this.registry.get('activeLetters');
+        const availableLetters = Object.keys(LETTER_ITEMS);
+
+        if (Array.isArray(savedLetters) && savedLetters.length) {
+            this.activeLetters = [...savedLetters];
+        } else {
+            this.activeLetters = Phaser.Utils.Array.Shuffle([...availableLetters]).slice(0, 3);
+        }
+
+        if (!this.activeLetters.length) {
+            this.activeLetters = availableLetters.slice(0, 3);
+        }
+
         this.sidebarWidth = width * SIDEBAR_RATIO;
 
         // Add garden background to the right side (items area)
@@ -347,15 +360,21 @@ export default class Game extends Phaser.Scene {
 
     createFlowerColumn(sidebarWidth, height) {
         const centerX = sidebarWidth / 2;
-        const letters = ['a', 'b', 'c']; // lowercase letters
         const flowerKeys = ['flower_head_1', 'flower_head_2', 'flower_head_3'];
+        const letters = (this.activeLetters && this.activeLetters.length)
+            ? this.activeLetters.slice(0, flowerKeys.length)
+            : [];
 
         // Store flower references for later collision detection
         this.flowers = [];
 
-        for (let i = 0; i < 3; i++) {
+        const flowerCount = Math.min(letters.length, flowerKeys.length);
+        const verticalStart = flowerCount === 1 ? 0.5 : 0.2;
+        const verticalStep = flowerCount <= 1 ? 0 : 0.6 / (flowerCount - 1);
 
-            const yPos = height * (0.20 + i * 0.30);
+        for (let i = 0; i < flowerCount; i++) {
+
+            const yPos = height * (verticalStart + i * verticalStep);
 
             // Use flower heads in fixed order (1, 2, 3 from top to bottom)
             const flowerKey = flowerKeys[i];
@@ -394,7 +413,12 @@ export default class Game extends Phaser.Scene {
     spawnItems(sidebarWidth, width, height) {
         // Build shuffled pool of items from current letters
         const pool = [];
-        Object.entries(LETTER_ITEMS).forEach(([letter, items]) => {
+        const lettersToUse = (this.activeLetters && this.activeLetters.length)
+            ? this.activeLetters
+            : Object.keys(LETTER_ITEMS);
+
+        lettersToUse.forEach(letter => {
+            const items = LETTER_ITEMS[letter] || [];
             items.forEach(itemName => {
                 pool.push({ key: `${letter}_${itemName}`, letter, name: itemName });
             });
@@ -433,19 +457,30 @@ export default class Game extends Phaser.Scene {
         const letterKey = `voice_letter_${letter}`;
         const wordKey = `voice_${letter}_${name}`;
 
-        const letterSound = this.sound.add(letterKey, { volume: VOICE_DEFAULT_VOLUME });
-        const wordSound = this.sound.add(wordKey, { volume: VOICE_DEFAULT_VOLUME });
+        const letterLoaded = this.cache.audio.exists(letterKey);
+        const wordLoaded = this.cache.audio.exists(wordKey);
 
-        letterSound.once('complete', () => {
-            letterSound.destroy();
+        if (!letterLoaded && !wordLoaded) return;
+
+        const playWord = () => {
+            if (!wordLoaded) return;
+            const wordSound = this.sound.add(wordKey, { volume: VOICE_DEFAULT_VOLUME });
+            wordSound.once('complete', () => {
+                wordSound.destroy();
+            });
             wordSound.play();
-        });
+        };
 
-        wordSound.once('complete', () => {
-            wordSound.destroy();
-        });
-
-        letterSound.play();
+        if (letterLoaded) {
+            const letterSound = this.sound.add(letterKey, { volume: VOICE_DEFAULT_VOLUME });
+            letterSound.once('complete', () => {
+                letterSound.destroy();
+                playWord();
+            });
+            letterSound.play();
+        } else {
+            playWord();
+        }
     }
 
     spawnItemFromPool() {
