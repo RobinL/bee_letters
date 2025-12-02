@@ -172,6 +172,12 @@ export default class Game extends Phaser.Scene {
         sprite.x = startPoint.x;
         sprite.y = startPoint.y;
 
+        // Hide the glow effect when orbiting
+        if (sprite.glowEffect) {
+            sprite.glowEffect.destroy();
+            sprite.glowEffect = null;
+        }
+
         this.activeOrbiters.push(orbitData);
 
         // Remove item after duration
@@ -184,6 +190,10 @@ export default class Game extends Phaser.Scene {
                 duration: 500,
                 ease: 'Power2',
                 onComplete: () => {
+                    // Clean up glow effect if it exists
+                    if (sprite.glowEffect) {
+                        sprite.glowEffect.destroy();
+                    }
                     sprite.destroy();
                     const index = this.activeOrbiters.indexOf(orbitData);
                     if (index > -1) {
@@ -205,6 +215,11 @@ export default class Game extends Phaser.Scene {
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
             gameObject.x = dragX;
             gameObject.y = dragY;
+
+            // Move glow effect with item
+            if (gameObject.glowEffect) {
+                gameObject.glowEffect.setPosition(dragX, dragY);
+            }
         });
 
         this.input.on('dragend', (pointer, gameObject) => {
@@ -439,6 +454,9 @@ export default class Game extends Phaser.Scene {
         // Add slight random rotation for visual interest
         item.setAngle(Phaser.Math.Between(-15, 15));
 
+        // Add glowing highlight effect to make items pop
+        this.addItemGlow(item);
+
         // Make item interactive and draggable
         item.setInteractive({ draggable: true });
         item.on('pointerdown', () => this.playItemVoice(nextItem.letter, nextItem.name));
@@ -463,6 +481,45 @@ export default class Game extends Phaser.Scene {
             this.gameComplete = true;
             this.showCompletionMessage();
         }
+    }
+
+    addItemGlow(item) {
+        // Create a soft white glow circle behind the item
+        const glowSize = Math.max(item.displayWidth, item.displayHeight) * 1.3;
+        const glow = this.add.graphics();
+
+        // Draw a radial gradient-like glow using concentric circles
+        const centerX = 0;
+        const centerY = 0;
+        const layers = 8;
+
+        for (let i = layers; i >= 0; i--) {
+            const ratio = i / layers;
+            const radius = (glowSize / 2) * (0.5 + ratio * 0.5);
+            const alpha = (1 - ratio) * 0.4; // Fade out towards edges
+
+            glow.fillStyle(0xffffff, alpha);
+            glow.fillCircle(centerX, centerY, radius);
+        }
+
+        // Position glow behind item
+        glow.setPosition(item.x, item.y);
+        glow.setDepth(item.depth - 1);
+
+        // Store reference on item for cleanup and position sync
+        item.glowEffect = glow;
+
+        // Add gentle pulsing animation
+        this.tweens.add({
+            targets: glow,
+            scaleX: 1.35,
+            scaleY: 1.35,
+            alpha: 0.7,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
     }
 
     showCompletionMessage() {
