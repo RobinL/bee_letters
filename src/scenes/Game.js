@@ -65,6 +65,9 @@ export default class Game extends Phaser.Scene {
 
         // Create volume slider UI
         this.createVolumeSlider(width, height);
+
+        // Show quick instructions in the top-right corner
+        this.createInstructionText(width);
     }
 
     update(time, delta) {
@@ -221,12 +224,14 @@ export default class Game extends Phaser.Scene {
     setupDragAndDrop() {
         // Enable drag events
         this.input.on('dragstart', (pointer, gameObject) => {
+            if (gameObject === this.sliderKnob) return;
             // Bring to top when dragging
             this.children.bringToTop(gameObject);
             gameObject.setTint(0xcccccc);
         });
 
         this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
+            if (gameObject === this.sliderKnob) return;
             gameObject.x = dragX;
             gameObject.y = dragY;
 
@@ -237,6 +242,7 @@ export default class Game extends Phaser.Scene {
         });
 
         this.input.on('dragend', (pointer, gameObject) => {
+            if (gameObject === this.sliderKnob) return;
             gameObject.clearTint();
 
             // Check if dropped on a flower
@@ -266,7 +272,7 @@ export default class Game extends Phaser.Scene {
                     this.onCorrectMatch(gameObject, closestFlower, itemData);
                 } else {
                     // Wrong match - return to original position
-                    this.onWrongMatch(gameObject, itemData);
+                    this.onWrongMatch(gameObject, closestFlower, itemData);
                 }
             }
         });
@@ -287,6 +293,7 @@ export default class Game extends Phaser.Scene {
         this.time.delayedCall(300, () => {
             flower.sprite.clearTint();
         });
+        this.playLetterPulse(flower.letterText);
 
         // Make the matched item fly a spirograph path around the flower
         this.startItemSpirograph(sprite, flower);
@@ -300,7 +307,7 @@ export default class Game extends Phaser.Scene {
         console.log('Correct! 🎉');
     }
 
-    onWrongMatch(sprite, itemData) {
+    onWrongMatch(sprite, flower, itemData) {
         // Shake and return to original position
         this.tweens.add({
             targets: sprite,
@@ -310,11 +317,17 @@ export default class Game extends Phaser.Scene {
             ease: 'Back.easeOut'
         });
 
-        // Flash red
-        sprite.setTint(0xff0000);
-        this.time.delayedCall(200, () => {
-            sprite.clearTint();
-        });
+        // Flash the flower red and shrink the letter before restoring it
+        if (flower && flower.sprite) {
+            flower.sprite.setTint(0xff0000);
+            this.time.delayedCall(300, () => {
+                flower.sprite.clearTint();
+            });
+        }
+
+        if (flower && flower.letterText) {
+            this.playLetterShrink(flower.letterText);
+        }
 
         console.log('Try again!');
     }
@@ -398,6 +411,9 @@ export default class Game extends Phaser.Scene {
             letterText.setOrigin(0.5, 0.5);
             // Keep letters above all sprites and graphics
             letterText.setDepth(1000);
+            letterText.setInteractive({ useHandCursor: true });
+            letterText.on('pointerover', () => this.playLetterPulse(letterText));
+            letterText.on('pointerout', () => this.resetLetterScale(letterText));
 
             // Store flower data
             this.flowers.push({
@@ -405,9 +421,50 @@ export default class Game extends Phaser.Scene {
                 letter: letters[i],
                 x: centerX,
                 y: yPos,
-                radius: (targetSize * scale) / 2
+                radius: (targetSize * scale) / 2,
+                letterText
             });
         }
+    }
+
+    playLetterPulse(letterText) {
+        if (!letterText) return;
+        this.tweens.killTweensOf(letterText);
+        letterText.setScale(1);
+
+        letterText.pulseTween = this.tweens.add({
+            targets: letterText,
+            scale: 2,
+            duration: 280,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            onComplete: () => {
+                letterText.setScale(1);
+                letterText.pulseTween = null;
+            }
+        });
+    }
+
+    playLetterShrink(letterText) {
+        if (!letterText) return;
+        this.tweens.killTweensOf(letterText);
+
+        this.tweens.add({
+            targets: letterText,
+            scale: 0,
+            duration: 220,
+            ease: 'Back.easeIn',
+            yoyo: true,
+            onComplete: () => {
+                letterText.setScale(1);
+            }
+        });
+    }
+
+    resetLetterScale(letterText) {
+        if (!letterText) return;
+        this.tweens.killTweensOf(letterText);
+        letterText.setScale(1);
     }
 
     spawnItems(sidebarWidth, width, height) {
@@ -634,6 +691,21 @@ export default class Game extends Phaser.Scene {
         const sliderY = 30;
         const sliderWidth = 80;
         const sliderHeight = 8;
+        const bgWidth = sliderWidth + 120;
+        const bgHeight = 44;
+
+        // Subtle white card behind controls for readability
+        this.volumeBg = this.add.rectangle(
+            sliderX + sliderWidth / 2 - 10,
+            sliderY,
+            bgWidth,
+            bgHeight,
+            0xffffff,
+            0.9
+        );
+        this.volumeBg.setDepth(180);
+        this.volumeBg.setStrokeStyle(1, 0xdedede, 0.8);
+        this.volumeBg.setInteractive({ useHandCursor: false });
 
         // Volume icon (speaker emoji as text)
         this.volumeIcon = this.add.text(sliderX - 30, sliderY, '🔊', {
@@ -738,5 +810,22 @@ export default class Game extends Phaser.Scene {
     updateSliderKnob(volume) {
         this.sliderKnob.x = this.sliderBounds.x + this.sliderBounds.width * volume;
         this.sliderFill.width = this.sliderBounds.width * volume;
+    }
+
+    createInstructionText(width) {
+        const padding = 16;
+        const instruction = this.add.text(
+            padding,
+            8,
+            'Instructions:\nDrag the glowing items to the letters',
+            {
+                fontSize: '18px',
+                fontFamily: 'Andika, Arial, sans-serif',
+                fill: '#4b2e1f',
+                align: 'left'
+            }
+        );
+        instruction.setOrigin(0, 0);
+        instruction.setDepth(250);
     }
 }
