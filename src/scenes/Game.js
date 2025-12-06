@@ -74,11 +74,30 @@ export default class Game extends Phaser.Scene {
         // Start background music
         this.startMusic();
 
-        // Create volume slider UI
-        this.createVolumeSlider(width, height);
+        // Shared layout for the top-right controls
+        const controlWidth = 140;
+        const controlHeight = 38;
+        const controlY = 36;
+        const rightMargin = 16;
+        const gap = 12;
+        const backX = width - rightMargin - controlWidth / 2;
+        const volumeX = backX - controlWidth - gap;
 
-        // Navigation back to the menu (hold to activate)
-        this.createBackButton(width);
+        // Create volume slider UI (to the left)
+        this.createVolumeSlider(width, height, {
+            cardX: volumeX,
+            cardY: controlY,
+            cardWidth: controlWidth,
+            cardHeight: controlHeight
+        });
+
+        // Navigation back to the menu (top-right)
+        this.createBackButton(width, {
+            x: backX,
+            y: controlY,
+            width: controlWidth,
+            height: controlHeight
+        });
 
         // Show quick instructions in the top-right corner
         this.createInstructionText(width);
@@ -812,30 +831,38 @@ export default class Game extends Phaser.Scene {
         this.music.play();
     }
 
-    createVolumeSlider(width, height) {
-        const sliderX = width - 100;
-        const sliderY = 30;
-        const sliderWidth = 80;
-        const sliderHeight = 8;
-        const bgWidth = sliderWidth + 120;
-        const bgHeight = 44;
-        this.sliderPosition = { x: sliderX, y: sliderY, width: sliderWidth };
+    createVolumeSlider(width, height, layout = {}) {
+        const sliderWidth = 90;
+        const sliderHeight = 10;
 
-        // Subtle white card behind controls for readability
+        const cardX = layout.cardX ?? (width - 100);
+        const cardY = layout.cardY ?? 30;
+        const cardWidth = layout.cardWidth ?? sliderWidth + 140;
+        const cardHeight = layout.cardHeight ?? 46;
+
+        const cardLeft = cardX - cardWidth / 2;
+        const iconX = cardLeft + 18;
+        const sliderX = cardLeft + 44; // start of the track/fill
+        const sliderCenterY = cardY;
+        this.sliderPosition = { x: sliderX, y: sliderCenterY, width: sliderWidth };
+
+        // Warm parchment card behind controls to match the back button styling
         this.volumeBg = this.add.rectangle(
-            sliderX + sliderWidth / 2 - 10,
-            sliderY,
-            bgWidth,
-            bgHeight,
-            0xffffff,
-            0.9
+            cardX,
+            cardY,
+            cardWidth,
+            cardHeight,
+            0xfff7e6,
+            0.96
         );
         this.volumeBg.setDepth(180);
-        this.volumeBg.setStrokeStyle(1, 0xdedede, 0.8);
+        this.volumeBg.setStrokeStyle(2, 0xd9b26f, 1);
 
         // Volume icon (speaker emoji as text)
-        this.volumeIcon = this.add.text(sliderX - 30, sliderY, '🔊', {
-            fontSize: '20px'
+        this.volumeIcon = this.add.text(iconX, sliderCenterY, '🔊', {
+            fontSize: '20px',
+            fontFamily: 'Andika, Arial, sans-serif',
+            color: '#8b4513'
         });
         this.volumeIcon.setOrigin(0.5, 0.5);
         this.volumeIcon.setDepth(200);
@@ -859,22 +886,22 @@ export default class Game extends Phaser.Scene {
         // Slider background (track)
         this.sliderTrack = this.add.rectangle(
             sliderX + sliderWidth / 2,
-            sliderY,
+            sliderCenterY,
             sliderWidth,
             sliderHeight,
-            0x444444,
-            0.8
+            0xd9b26f,
+            0.4
         );
         this.sliderTrack.setDepth(200);
 
         // Slider fill (shows current volume)
         this.sliderFill = this.add.rectangle(
             sliderX,
-            sliderY,
+            sliderCenterY,
             sliderWidth * MUSIC_DEFAULT_VOLUME,
             sliderHeight,
-            0x4ecdc4,
-            1
+            0x94c973,
+            0.95
         );
         this.sliderFill.setOrigin(0, 0.5);
         this.sliderFill.setDepth(201);
@@ -882,12 +909,13 @@ export default class Game extends Phaser.Scene {
         // Slider knob
         this.sliderKnob = this.add.circle(
             sliderX + sliderWidth * MUSIC_DEFAULT_VOLUME,
-            sliderY,
+            sliderCenterY,
             10,
-            0xffffff,
+            0xfff7e6,
             1
         );
         this.sliderKnob.setDepth(202);
+        this.sliderKnob.setStrokeStyle(2, 0xd9b26f, 1);
         this.sliderKnob.setInteractive({ useHandCursor: true, draggable: true });
 
         // Store slider bounds for drag calculation
@@ -933,14 +961,13 @@ export default class Game extends Phaser.Scene {
         });
     }
 
-    createBackButton(width) {
-        const sliderX = this.sliderPosition ? this.sliderPosition.x : width - 100;
-        const sliderY = this.sliderPosition ? this.sliderPosition.y : 30;
-        const buttonWidth = 82;
-        const buttonHeight = 32;
-        const containerX = sliderX - buttonWidth - 26;
+    createBackButton(width, layout = {}) {
+        const buttonWidth = layout.width ?? 120;
+        const buttonHeight = layout.height ?? 36;
+        const containerX = layout.x ?? width - 100;
+        const containerY = layout.y ?? 30;
 
-        const container = this.add.container(containerX, sliderY);
+        const container = this.add.container(containerX, containerY);
         const bg = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0xfff7e6, 0.95);
         bg.setStrokeStyle(2, 0xd9b26f, 1);
         const label = this.add.text(0, 0, 'Back (hold)', {

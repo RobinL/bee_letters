@@ -128,13 +128,13 @@ export default class Menu extends Phaser.Scene {
         });
         label.setOrigin(0.5);
 
-        this.startButton.add([background, label]);
+        const hitZone = this.add.zone(0, 0, buttonWidth, buttonHeight);
+        hitZone.setOrigin(0.5);
+        hitZone.setInteractive({ useHandCursor: true });
+        hitZone.on('pointerdown', () => this.handleStart());
+
+        this.startButton.add([background, label, hitZone]);
         this.startButton.setSize(buttonWidth, buttonHeight);
-        this.startButton.setInteractive(
-            new Phaser.Geom.Rectangle(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight),
-            Phaser.Geom.Rectangle.Contains
-        );
-        this.startButton.on('pointerdown', () => this.handleStart());
         this.startButtonBg = background;
     }
 
