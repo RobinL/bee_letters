@@ -75,14 +75,14 @@ export default defineConfig({
         letterManifestPlugin(),
         imagetools({
             defaultDirectives: (url) => {
-                if (url.pathname.match(/background|hero-bg|footer-bg/)) {
-                    return new URLSearchParams({
-                        format: 'webp',
-                        quality: '90',
-                        width: '1920',
-                        as: 'url'
-                    });
-                }
+                // if (url.pathname.match(/background/)) {
+                //     return new URLSearchParams({
+                //         format: 'webp',
+                //         quality: '90',
+                //         width: '1920',
+                //         as: 'url'
+                //     });
+                // }
 
                 return new URLSearchParams({
                     format: 'webp',
