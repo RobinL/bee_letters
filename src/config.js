@@ -2,6 +2,13 @@ import letterManifest from './generated/letterManifest.json';
 
 const manifest = letterManifest || { items: {}, itemVoices: {} };
 
+// ----- Curriculum order (single letters only) -----
+export const CURRICULUM_LETTER_ORDER = [
+    's', 'a', 't', 'p', 'm', 'i', 'd', 'n', 'g', 'o',
+    'c', 'k', 'e', 'r', 'u', 'l', 'h', 'f', 'b',
+    'j', 'v', 'w', 'x', 'y', 'z'
+];
+
 // ===========================================
 // GAME CONFIGURATION
 // ===========================================

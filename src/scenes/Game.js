@@ -16,6 +16,8 @@ export default class Game extends Phaser.Scene {
     constructor() {
         super('Game');
         this.activeOrbiters = []; // Track item spirograph animations
+        this.backHoldTimer = null;
+        this.backHoldTriggered = false;
     }
 
     create() {
@@ -66,8 +68,14 @@ export default class Game extends Phaser.Scene {
         // Create volume slider UI
         this.createVolumeSlider(width, height);
 
+        // Navigation back to the menu (hold to activate)
+        this.createBackButton(width);
+
         // Show quick instructions in the top-right corner
         this.createInstructionText(width);
+
+        // Clean up when leaving the scene
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanupScene());
     }
 
     update(time, delta) {
@@ -693,6 +701,7 @@ export default class Game extends Phaser.Scene {
         const sliderHeight = 8;
         const bgWidth = sliderWidth + 120;
         const bgHeight = 44;
+        this.sliderPosition = { x: sliderX, y: sliderY, width: sliderWidth };
 
         // Subtle white card behind controls for readability
         this.volumeBg = this.add.rectangle(
@@ -705,7 +714,6 @@ export default class Game extends Phaser.Scene {
         );
         this.volumeBg.setDepth(180);
         this.volumeBg.setStrokeStyle(1, 0xdedede, 0.8);
-        this.volumeBg.setInteractive({ useHandCursor: false });
 
         // Volume icon (speaker emoji as text)
         this.volumeIcon = this.add.text(sliderX - 30, sliderY, '🔊', {
@@ -805,6 +813,86 @@ export default class Game extends Phaser.Scene {
             this.updateSliderKnob(clampedVolume);
             this.volumeIcon.setText(clampedVolume > 0 ? '🔊' : '🔇');
         });
+    }
+
+    createBackButton(width) {
+        const sliderX = this.sliderPosition ? this.sliderPosition.x : width - 100;
+        const sliderY = this.sliderPosition ? this.sliderPosition.y : 30;
+        const buttonWidth = 82;
+        const buttonHeight = 32;
+        const containerX = sliderX - buttonWidth - 26;
+
+        const container = this.add.container(containerX, sliderY);
+        const bg = this.add.rectangle(0, 0, buttonWidth, buttonHeight, 0xfff7e6, 0.95);
+        bg.setStrokeStyle(2, 0xd9b26f, 1);
+        const label = this.add.text(0, 0, 'Back (hold)', {
+            fontSize: '14px',
+            fontFamily: 'Andika, Arial, sans-serif',
+            color: '#8b4513'
+        });
+        label.setOrigin(0.5);
+
+        container.add([bg, label]);
+        container.setSize(buttonWidth, buttonHeight);
+        container.setDepth(205);
+        container.setInteractive(
+            new Phaser.Geom.Rectangle(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight),
+            Phaser.Geom.Rectangle.Contains
+        );
+        container.input.cursor = 'pointer';
+
+        container.on('pointerdown', () => this.startBackHold(bg));
+        container.on('pointerup', () => this.releaseBackHold(bg));
+        container.on('pointerout', () => this.clearBackHold(bg));
+
+        this.backButtonBg = bg;
+    }
+
+    startBackHold(bg) {
+        this.clearBackHold(bg, false);
+        this.backHoldTriggered = false;
+        if (bg) {
+            bg.setFillStyle(0xffe6b8, 0.98);
+        }
+        this.backHoldTimer = this.time.delayedCall(600, () => {
+            this.backHoldTriggered = true;
+            this.returnToMenu();
+        });
+    }
+
+    releaseBackHold(bg) {
+        const alreadyTriggered = this.backHoldTriggered;
+        this.clearBackHold(bg);
+        if (!alreadyTriggered) {
+            this.returnToMenu();
+        }
+    }
+
+    clearBackHold(bg, resetColor = true) {
+        if (this.backHoldTimer) {
+            this.backHoldTimer.remove(false);
+            this.backHoldTimer = null;
+        }
+        this.backHoldTriggered = false;
+        if (bg && resetColor) {
+            bg.setFillStyle(0xfff7e6, 0.95);
+            bg.setAlpha(1);
+        }
+    }
+
+    returnToMenu() {
+        this.clearBackHold(this.backButtonBg);
+        if (this.music) {
+            this.music.stop();
+        }
+        this.scene.start('Menu');
+    }
+
+    cleanupScene() {
+        this.clearBackHold(this.backButtonBg);
+        if (this.music) {
+            this.music.stop();
+        }
     }
 
     updateSliderKnob(volume) {

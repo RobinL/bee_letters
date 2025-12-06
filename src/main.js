@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import Preloader from './scenes/Preloader.js';
 import Game from './scenes/Game.js';
+import Menu from './scenes/Menu.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,7 +19,7 @@ const config = {
         mouse: { preventDefaultDown: true },
         activePointers: 3
     },
-    scene: [Preloader, Game]
+    scene: [Menu, Preloader, Game]
 };
 
 const game = new Phaser.Game(config);

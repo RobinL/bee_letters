@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { LETTER_ITEMS, LETTER_ITEM_VOICES } from '../config.js';
+import { CURRICULUM_LETTER_ORDER, LETTER_ITEMS, LETTER_ITEM_VOICES } from '../config.js';
 
 export default class Preloader extends Phaser.Scene {
     constructor() {
@@ -17,10 +17,18 @@ export default class Preloader extends Phaser.Scene {
         });
         loadingText.setOrigin(0.5, 0.5);
 
-        const allLetters = Object.keys(LETTER_ITEMS);
-        const shuffledLetters = Phaser.Utils.Array.Shuffle([...allLetters]);
-        const letterCount = Math.min(3, shuffledLetters.length);
-        this.activeLetters = shuffledLetters.slice(0, letterCount);
+        const availableLetters = CURRICULUM_LETTER_ORDER.filter(letter => LETTER_ITEMS[letter]);
+        const fallbackPool = availableLetters.length ? availableLetters : Object.keys(LETTER_ITEMS);
+        const savedLetters = this.registry.get('activeLetters');
+        const providedLetters = Array.isArray(savedLetters) ? savedLetters : [];
+
+        this.activeLetters = providedLetters
+            .filter(letter => fallbackPool.includes(letter))
+            .slice(0, 3);
+
+        if (!this.activeLetters.length) {
+            this.activeLetters = fallbackPool.slice(0, Math.min(3, fallbackPool.length));
+        }
 
         if (this.activeLetters.length === 0) {
             loadingText.setText('No letter items found');
