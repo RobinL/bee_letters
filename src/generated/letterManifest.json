@@ -1,21 +1,24 @@
 {
   "items": {
     "a": [
-      "accordian",
+      "accordion",
       "acorn",
+      "airplane",
+      "alligator",
+      "anchor",
       "ant",
       "apple",
       "arrow",
       "astronaut"
     ],
     "b": [
-      "ball",
-      "banana",
+      "bananas",
+      "beachball",
       "bear",
       "bee",
       "bird",
       "boat",
-      "book",
+      "books",
       "bus",
       "butterfly"
     ],
@@ -32,17 +35,30 @@
     ],
     "d": [
       "dog",
-      "drum"
+      "doll",
+      "dolphin",
+      "donkey",
+      "door",
+      "dragon",
+      "dress",
+      "drum",
+      "duck"
     ],
     "e": [
       "eagle",
       "ear",
+      "earth",
+      "easel",
       "egg",
-      "elephant"
+      "elephant",
+      "engine",
+      "envelope",
+      "eraser"
     ],
     "f": [
       "feather",
       "fence",
+      "firefly",
       "fish",
       "flower",
       "foot",
@@ -53,29 +69,211 @@
     "g": [
       "garden",
       "ghost",
+      "gift",
       "giraffe",
       "gloves",
       "goat",
+      "goldfish",
       "grapes",
       "guitar"
+    ],
+    "h": [
+      "hammer",
+      "hand",
+      "hat",
+      "heart",
+      "hedgehog",
+      "helicopter",
+      "horse",
+      "hotdog",
+      "house"
+    ],
+    "i": [
+      "ice_cream",
+      "igloo",
+      "iguana",
+      "inkpot",
+      "insect",
+      "instrument",
+      "invitation",
+      "iron",
+      "island"
+    ],
+    "j": [
+      "jaguar",
+      "jar",
+      "jean_jacket",
+      "jelly",
+      "jellyfish",
+      "jet",
+      "jigsaw",
+      "juggler",
+      "juice"
+    ],
+    "k": [
+      "kangaroo",
+      "kettle_drum",
+      "key",
+      "kid",
+      "kite",
+      "kiwi",
+      "knight",
+      "knot",
+      "koala"
+    ],
+    "l": [
+      "labrador",
+      "ladybug",
+      "lamp",
+      "lemon",
+      "lemur",
+      "lettuce",
+      "library",
+      "llama",
+      "lungs"
+    ],
+    "m": [
+      "map",
+      "milk_carton",
+      "mitten",
+      "monkey",
+      "moon",
+      "mountain",
+      "mouse",
+      "muffin",
+      "mushroom"
+    ],
+    "n": [
+      "nail",
+      "needle",
+      "nest",
+      "net",
+      "newt",
+      "night",
+      "nose",
+      "nurse",
+      "nuts"
+    ],
+    "o": [
+      "oar",
+      "octopus",
+      "onion",
+      "orange",
+      "orangutan",
+      "orbit",
+      "ostrich",
+      "overalls",
+      "owl"
+    ],
+    "p": [
+      "panda",
+      "pen",
+      "pencil",
+      "penguin",
+      "pig",
+      "pineapple",
+      "pirate",
+      "pizza",
+      "pumpkin"
+    ],
+    "q": [
+      "quaff",
+      "quail",
+      "quarter",
+      "queen",
+      "question",
+      "quill",
+      "quilt",
+      "quince",
+      "quiver"
+    ],
+    "r": [
+      "rabbit",
+      "radishes",
+      "rainbow",
+      "ring",
+      "robin",
+      "robot",
+      "rocket",
+      "rose",
+      "ruler"
+    ],
+    "s": [
+      "sailboat",
+      "sheep",
+      "snake",
+      "snowman",
+      "socks",
+      "spoon",
+      "star",
+      "strawberry",
+      "sun"
+    ],
+    "t": [
+      "table",
+      "teapot",
+      "teddy_bear",
+      "tiger",
+      "tomato",
+      "tractor",
+      "train",
+      "tree",
+      "turtle"
+    ],
+    "u": [
+      "ukulele",
+      "umbrella",
+      "ungulate",
+      "unicorn",
+      "unicycle",
+      "unidentified_object",
+      "uniform",
+      "urchin",
+      "utensils"
+    ],
+    "v": [
+      "vacuum",
+      "van",
+      "vase",
+      "vegetables",
+      "vest",
+      "village",
+      "violin",
+      "volcano",
+      "vulture"
+    ],
+    "w": [
+      "wagon",
+      "watch",
+      "watermelon",
+      "web",
+      "whale",
+      "wind",
+      "wizard",
+      "wolf",
+      "worm"
     ]
   },
   "itemVoices": {
     "a": [
-      "accordian",
+      "accordion",
       "acorn",
+      "airplane",
+      "alligator",
+      "anchor",
       "ant",
+      "apple",
       "arrow",
       "astronaut"
     ],
     "b": [
-      "ball",
-      "banana",
+      "bananas",
+      "beachball",
       "bear",
       "bee",
       "bird",
       "boat",
-      "book",
+      "books",
       "bus",
       "butterfly"
     ],
@@ -92,17 +290,30 @@
     ],
     "d": [
       "dog",
-      "drum"
+      "doll",
+      "dolphin",
+      "donkey",
+      "door",
+      "dragon",
+      "dress",
+      "drum",
+      "duck"
     ],
     "e": [
       "eagle",
       "ear",
+      "earth",
+      "easel",
       "egg",
-      "elephant"
+      "elephant",
+      "engine",
+      "envelope",
+      "eraser"
     ],
     "f": [
       "feather",
       "fence",
+      "firefly",
       "fish",
       "flower",
       "foot",
@@ -113,11 +324,189 @@
     "g": [
       "garden",
       "ghost",
+      "gift",
       "giraffe",
       "gloves",
       "goat",
+      "goldfish",
       "grapes",
       "guitar"
+    ],
+    "h": [
+      "hammer",
+      "hand",
+      "hat",
+      "heart",
+      "hedgehog",
+      "helicopter",
+      "horse",
+      "hotdog",
+      "house"
+    ],
+    "i": [
+      "ice_cream",
+      "igloo",
+      "iguana",
+      "inkpot",
+      "insect",
+      "instrument",
+      "invitation",
+      "iron",
+      "island"
+    ],
+    "j": [
+      "jaguar",
+      "jar",
+      "jean_jacket",
+      "jelly",
+      "jellyfish",
+      "jet",
+      "jigsaw",
+      "juggler",
+      "juice"
+    ],
+    "k": [
+      "kangaroo",
+      "kettle_drum",
+      "key",
+      "kid",
+      "kite",
+      "kiwi",
+      "knight",
+      "knot",
+      "koala"
+    ],
+    "l": [
+      "labrador",
+      "ladybug",
+      "lamp",
+      "lemon",
+      "lemur",
+      "lettuce",
+      "library",
+      "llama",
+      "lungs"
+    ],
+    "m": [
+      "map",
+      "milk_carton",
+      "mitten",
+      "monkey",
+      "moon",
+      "mountain",
+      "mouse",
+      "muffin",
+      "mushroom"
+    ],
+    "n": [
+      "nail",
+      "needle",
+      "nest",
+      "net",
+      "newt",
+      "night",
+      "nose",
+      "nurse",
+      "nuts"
+    ],
+    "o": [
+      "oar",
+      "octopus",
+      "onion",
+      "orange",
+      "orangutan",
+      "orbit",
+      "ostrich",
+      "overalls",
+      "owl"
+    ],
+    "p": [
+      "panda",
+      "pen",
+      "pencil",
+      "penguin",
+      "pig",
+      "pineapple",
+      "pirate",
+      "pizza",
+      "pumpkin"
+    ],
+    "q": [
+      "quaff",
+      "quail",
+      "quarter",
+      "queen",
+      "question",
+      "quill",
+      "quilt",
+      "quince",
+      "quiver"
+    ],
+    "r": [
+      "rabbit",
+      "radishes",
+      "rainbow",
+      "ring",
+      "robin",
+      "robot",
+      "rocket",
+      "rose",
+      "ruler"
+    ],
+    "s": [
+      "sailboat",
+      "sheep",
+      "snake",
+      "snowman",
+      "socks",
+      "spoon",
+      "star",
+      "strawberry",
+      "sun"
+    ],
+    "t": [
+      "table",
+      "teapot",
+      "teddy_bear",
+      "tiger",
+      "tomato",
+      "tractor",
+      "train",
+      "tree",
+      "turtle"
+    ],
+    "u": [
+      "ukulele",
+      "umbrella",
+      "ungulate",
+      "unicorn",
+      "unicycle",
+      "unidentified_object",
+      "uniform",
+      "urchin",
+      "utensils"
+    ],
+    "v": [
+      "vacuum",
+      "van",
+      "vase",
+      "vegetables",
+      "vest",
+      "village",
+      "violin",
+      "volcano",
+      "vulture"
+    ],
+    "w": [
+      "wagon",
+      "watch",
+      "watermelon",
+      "web",
+      "whale",
+      "wind",
+      "wizard",
+      "wolf",
+      "worm"
     ]
   }
 }

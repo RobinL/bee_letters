@@ -62,6 +62,7 @@ let itemLookup = buildItemLookup(); // Map<recordingKey, item>
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
+let isStartingRecording = false;
 let currentAudio = null;
 
 // DOM Elements
@@ -95,13 +96,14 @@ async function init() {
     // Setup event listeners
     elements.btnModeWords.addEventListener('click', () => switchDataset('words'));
     elements.btnModeLetters.addEventListener('click', () => switchDataset('letters'));
-    elements.btnRecord.addEventListener('click', startRecording);
+    elements.btnRecord.addEventListener('click', toggleRecording);
     elements.btnStop.addEventListener('click', stopRecording);
     elements.btnPlay.addEventListener('click', playRecording);
     elements.btnDownload.addEventListener('click', downloadCurrent);
     elements.btnPrev.addEventListener('click', () => navigate(-1));
     elements.btnNext.addEventListener('click', () => navigate(1));
     elements.btnDownloadAll.addEventListener('click', downloadAll);
+    document.addEventListener('keydown', handleGlobalKeydown);
 
     // Request microphone permission early
     try {
@@ -139,12 +141,16 @@ function updateDisplay() {
         : `Letter: ${item.letter.toUpperCase()}`;
 
     // Update navigation buttons
-    elements.btnPrev.disabled = currentIndex === 0;
-    elements.btnNext.disabled = currentIndex === items.length - 1;
+    const navigationLocked = isRecording || isStartingRecording;
+    elements.btnPrev.disabled = navigationLocked || currentIndex === 0;
+    elements.btnNext.disabled = navigationLocked || items.length === 0 || currentIndex === items.length - 1;
 
     // Update status based on recording state
     const hasRecording = recordings.has(item.recordingKey);
-    if (isRecording) {
+    if (isStartingRecording) {
+        elements.status.innerHTML = '<span class="recording-indicator"></span>Preparing mic...';
+        elements.status.className = 'status recording';
+    } else if (isRecording) {
         elements.status.innerHTML = '<span class="recording-indicator"></span>Recording...';
         elements.status.className = 'status recording';
     } else if (hasRecording) {
@@ -156,14 +162,27 @@ function updateDisplay() {
     }
 
     // Update button states
-    elements.btnPlay.disabled = !hasRecording;
-    elements.btnDownload.disabled = !hasRecording;
+    updateRecordButtonState(hasRecording);
 
     // Update progress
     updateProgress();
 
     // Update item list
     renderItemList();
+}
+
+function updateRecordButtonState(hasRecording) {
+    const recordLabel = isRecording ? '⏹️ Stop (Space)' : '🎙️ Record (Space)';
+    elements.btnRecord.textContent = isStartingRecording ? '⏳ Preparing...' : recordLabel;
+    elements.btnRecord.classList.toggle('recording', isRecording || isStartingRecording);
+    elements.btnRecord.disabled = isStartingRecording;
+
+    // Stop button only useful while recording
+    elements.btnStop.disabled = !isRecording;
+
+    // Allow quick playback/download toggling
+    elements.btnPlay.disabled = !hasRecording;
+    elements.btnDownload.disabled = !hasRecording;
 }
 
 function updateProgress() {
@@ -195,10 +214,13 @@ function renderItemList() {
     // Add click handlers
     elements.itemList.querySelectorAll('.item-list-item').forEach(el => {
         el.addEventListener('click', () => {
+            if (isRecording || isStartingRecording) return;
             currentIndex = parseInt(el.dataset.index);
             updateDisplay();
         });
     });
+
+    scrollCurrentItemIntoView();
 }
 
 function updateModeButtons() {
@@ -210,7 +232,7 @@ function updateModeButtons() {
 
 function switchDataset(datasetKey) {
     if (datasetKey === activeDatasetKey || !datasets[datasetKey]) return;
-    if (isRecording) {
+    if (isRecording || isStartingRecording) {
         alert('Stop recording before switching lists.');
         return;
     }
@@ -224,6 +246,7 @@ function switchDataset(datasetKey) {
 }
 
 function navigate(direction) {
+    if (isRecording || isStartingRecording) return;
     const newIndex = currentIndex + direction;
     if (newIndex >= 0 && newIndex < items.length) {
         currentIndex = newIndex;
@@ -232,7 +255,20 @@ function navigate(direction) {
     }
 }
 
+function toggleRecording() {
+    if (isStartingRecording) return;
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
+    }
+}
+
 async function startRecording() {
+    if (isRecording || isStartingRecording) return;
+    isStartingRecording = true;
+    updateDisplay();
+
     const item = items[currentIndex];
 
     try {
@@ -265,22 +301,26 @@ async function startRecording() {
             stream.getTracks().forEach(track => track.stop());
 
             isRecording = false;
+            isStartingRecording = false;
             updateDisplay();
+            autoPlayAndAdvance(item.recordingKey);
         };
 
         mediaRecorder.start();
         isRecording = true;
+        isStartingRecording = false;
 
-        // Update UI
-        elements.btnRecord.disabled = true;
-        elements.btnRecord.classList.add('recording');
-        elements.btnStop.disabled = false;
         updateDisplay();
 
     } catch (err) {
         console.error('Failed to start recording:', err);
         elements.status.textContent = '⚠️ Recording failed!';
         elements.status.className = 'status recording';
+    } finally {
+        if (!isRecording) {
+            isStartingRecording = false;
+            updateDisplay();
+        }
     }
 }
 
@@ -289,9 +329,9 @@ function stopRecording() {
         mediaRecorder.stop();
     }
 
-    elements.btnRecord.disabled = false;
-    elements.btnRecord.classList.remove('recording');
-    elements.btnStop.disabled = true;
+    isRecording = false;
+    isStartingRecording = false;
+    updateDisplay();
 }
 
 function stopPlayback() {
@@ -303,11 +343,14 @@ function stopPlayback() {
 
 function playRecording() {
     const item = items[currentIndex];
-    const blob = recordings.get(item.recordingKey);
+    playRecordingForKey(item.recordingKey);
+}
 
-    if (!blob) return;
+function playRecordingForKey(recordingKey, { onEnded } = {}) {
+    const blob = recordings.get(recordingKey);
 
-    // Stop any currently playing audio
+    if (!blob) return null;
+
     stopPlayback();
 
     const url = URL.createObjectURL(blob);
@@ -315,8 +358,37 @@ function playRecording() {
     currentAudio.onended = () => {
         URL.revokeObjectURL(url);
         currentAudio = null;
+        if (onEnded) onEnded();
     };
-    currentAudio.play();
+    currentAudio.play().catch(err => {
+        console.error('Playback failed:', err);
+        URL.revokeObjectURL(url);
+        if (currentAudio) {
+            currentAudio = null;
+        }
+        if (onEnded) onEnded();
+    });
+
+    return currentAudio;
+}
+
+function autoPlayAndAdvance(recordingKey) {
+    const recordedIndex = items.findIndex(item => item.recordingKey === recordingKey);
+    if (recordedIndex === -1) return;
+
+    currentIndex = recordedIndex;
+    updateDisplay();
+
+    const isLastItem = recordedIndex >= items.length - 1;
+
+    playRecordingForKey(recordingKey, {
+        onEnded: () => {
+            if (!isLastItem && currentIndex === recordedIndex) {
+                currentIndex = recordedIndex + 1;
+                updateDisplay();
+            }
+        }
+    });
 }
 
 function downloadCurrent() {
@@ -370,6 +442,22 @@ async function downloadAll() {
         elements.btnDownloadAll.disabled = false;
         elements.btnDownloadAll.textContent = '📦 Download All as ZIP';
     }
+}
+
+function handleGlobalKeydown(event) {
+    if (event.code !== 'Space' && event.key !== ' ') return;
+
+    const targetTag = (event.target && event.target.tagName || '').toLowerCase();
+    if (targetTag === 'input' || targetTag === 'textarea') return;
+
+    event.preventDefault();
+    toggleRecording();
+}
+
+function scrollCurrentItemIntoView() {
+    const currentEl = elements.itemList.querySelector('.item-list-item.current');
+    if (!currentEl) return;
+    currentEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 // Start the app
