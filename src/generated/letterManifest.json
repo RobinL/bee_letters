@@ -51,14 +51,12 @@
       "easel",
       "egg",
       "elephant",
-      "engine",
       "envelope",
       "eraser"
     ],
     "f": [
       "feather",
       "fence",
-      "firefly",
       "fish",
       "flower",
       "foot",
@@ -69,7 +67,6 @@
     "g": [
       "garden",
       "ghost",
-      "gift",
       "giraffe",
       "gloves",
       "goat",
@@ -93,7 +90,6 @@
       "igloo",
       "iguana",
       "inkpot",
-      "insect",
       "instrument",
       "invitation",
       "iron",
@@ -105,32 +101,26 @@
       "jean_jacket",
       "jelly",
       "jellyfish",
-      "jet",
       "jigsaw",
       "juggler",
       "juice"
     ],
     "k": [
       "kangaroo",
-      "kettle_drum",
       "key",
       "kid",
       "kite",
       "kiwi",
-      "knight",
-      "knot",
       "koala"
     ],
     "l": [
-      "labrador",
       "ladybug",
       "lamp",
       "lemon",
       "lemur",
       "lettuce",
       "library",
-      "llama",
-      "lungs"
+      "llama"
     ],
     "m": [
       "map",
@@ -160,9 +150,7 @@
       "onion",
       "orange",
       "orangutan",
-      "orbit",
       "ostrich",
-      "overalls",
       "owl"
     ],
     "p": [
@@ -177,9 +165,7 @@
       "pumpkin"
     ],
     "q": [
-      "quaff",
       "quail",
-      "quarter",
       "queen",
       "question",
       "quill",
@@ -204,7 +190,6 @@
       "snake",
       "snowman",
       "socks",
-      "spoon",
       "star",
       "strawberry",
       "sun"
@@ -212,7 +197,6 @@
     "t": [
       "table",
       "teapot",
-      "teddy_bear",
       "tiger",
       "tomato",
       "tractor",
@@ -223,11 +207,9 @@
     "u": [
       "ukulele",
       "umbrella",
-      "ungulate",
       "unicorn",
       "unicycle",
       "unidentified_object",
-      "uniform",
       "urchin",
       "utensils"
     ],
@@ -306,14 +288,12 @@
       "easel",
       "egg",
       "elephant",
-      "engine",
       "envelope",
       "eraser"
     ],
     "f": [
       "feather",
       "fence",
-      "firefly",
       "fish",
       "flower",
       "foot",
@@ -324,7 +304,6 @@
     "g": [
       "garden",
       "ghost",
-      "gift",
       "giraffe",
       "gloves",
       "goat",
@@ -348,7 +327,6 @@
       "igloo",
       "iguana",
       "inkpot",
-      "insect",
       "instrument",
       "invitation",
       "iron",
@@ -360,32 +338,26 @@
       "jean_jacket",
       "jelly",
       "jellyfish",
-      "jet",
       "jigsaw",
       "juggler",
       "juice"
     ],
     "k": [
       "kangaroo",
-      "kettle_drum",
       "key",
       "kid",
       "kite",
       "kiwi",
-      "knight",
-      "knot",
       "koala"
     ],
     "l": [
-      "labrador",
       "ladybug",
       "lamp",
       "lemon",
       "lemur",
       "lettuce",
       "library",
-      "llama",
-      "lungs"
+      "llama"
     ],
     "m": [
       "map",
@@ -415,9 +387,7 @@
       "onion",
       "orange",
       "orangutan",
-      "orbit",
       "ostrich",
-      "overalls",
       "owl"
     ],
     "p": [
@@ -432,9 +402,7 @@
       "pumpkin"
     ],
     "q": [
-      "quaff",
       "quail",
-      "quarter",
       "queen",
       "question",
       "quill",
@@ -459,7 +427,6 @@
       "snake",
       "snowman",
       "socks",
-      "spoon",
       "star",
       "strawberry",
       "sun"
@@ -467,7 +434,6 @@
     "t": [
       "table",
       "teapot",
-      "teddy_bear",
       "tiger",
       "tomato",
       "tractor",
@@ -478,11 +444,9 @@
     "u": [
       "ukulele",
       "umbrella",
-      "ungulate",
       "unicorn",
       "unicycle",
       "unidentified_object",
-      "uniform",
       "urchin",
       "utensils"
     ],
