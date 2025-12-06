@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { imagetools } from 'vite-imagetools';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -70,5 +71,32 @@ export default defineConfig({
     build: {
         outDir: 'dist'
     },
-    plugins: [letterManifestPlugin()]
+    plugins: [
+        letterManifestPlugin(),
+        imagetools({
+            // Intercept standard image imports
+            include: '**/*.{png,jpg,jpeg}',
+            // Apply global directives based on filename
+            defaultDirectives: (url) => {
+                if (
+                    url.pathname.includes('background') ||
+                    url.pathname.includes('hero-bg') ||
+                    url.pathname.includes('footer-bg')
+                ) {
+                    return new URLSearchParams({
+                        format: 'webp',
+                        quality: '90',
+                        as: 'url'
+                    });
+                }
+
+                return new URLSearchParams({
+                    format: 'webp',
+                    w: '1200',
+                    quality: '60',
+                    as: 'url'
+                });
+            }
+        })
+    ]
 });
