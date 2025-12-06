@@ -977,18 +977,17 @@ export default class Game extends Phaser.Scene {
         });
         label.setOrigin(0.5);
 
-        container.add([bg, label]);
+        const hitZone = this.add.zone(0, 0, buttonWidth, buttonHeight);
+        hitZone.setOrigin(0.5);
+        hitZone.setInteractive({ useHandCursor: true });
+
+        container.add([bg, label, hitZone]);
         container.setSize(buttonWidth, buttonHeight);
         container.setDepth(205);
-        container.setInteractive(
-            new Phaser.Geom.Rectangle(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight),
-            Phaser.Geom.Rectangle.Contains
-        );
-        container.input.cursor = 'pointer';
 
-        container.on('pointerdown', () => this.startBackHold(bg));
-        container.on('pointerup', () => this.releaseBackHold(bg));
-        container.on('pointerout', () => this.clearBackHold(bg));
+        hitZone.on('pointerdown', () => this.startBackHold(bg));
+        hitZone.on('pointerup', () => this.releaseBackHold(bg));
+        hitZone.on('pointerout', () => this.clearBackHold(bg));
 
         this.backButtonBg = bg;
     }
