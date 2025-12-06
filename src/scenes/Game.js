@@ -12,12 +12,20 @@ import {
     VOICE_DEFAULT_VOLUME
 } from '../config.js';
 
+const ORBIT_HUE_DRIFT = 0.00018; // Constant, subtle hue drift speed
+const SPARKLE_LIFESPAN = 820;
+const SPARKLE_FREQUENCY = 26;
+const SPARKLE_SPEED_MIN = 7;
+const SPARKLE_SPEED_MAX = 22;
+const SPARKLE_RADIUS = 14;
+
 export default class Game extends Phaser.Scene {
     constructor() {
         super('Game');
         this.activeOrbiters = []; // Track item spirograph animations
         this.backHoldTimer = null;
         this.backHoldTriggered = false;
+        this.sparkleEmitters = [];
     }
 
     create() {
@@ -51,7 +59,8 @@ export default class Game extends Phaser.Scene {
 
         // Create graphics object for bee trails (after flowers so it renders on top)
         this.trailGraphics = this.add.graphics();
-        this.trailGraphics.setDepth(100); // Ensure trails are on top of flowers
+        this.trailGraphics.setDepth(70); // Ensure trails are on top of flowers but behind items
+        this.prepareSparkles();
 
         // Step 5: Spawn random items on the right
         this.spawnItems(this.sidebarWidth, width, height);
@@ -78,6 +87,31 @@ export default class Game extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanupScene());
     }
 
+    prepareSparkles() {
+        this.sparkleTextureKey = 'spiro_sparkle';
+
+        if (!this.textures.exists(this.sparkleTextureKey)) {
+            // Draw a tiny glowing dot texture for particle effects
+            const g = this.make.graphics({ x: 0, y: 0, add: false });
+            const size = 20;
+            const center = size / 2;
+
+            const rings = [
+                { radius: 2.5, alpha: 1 },
+                { radius: 5, alpha: 0.5 },
+                { radius: 8, alpha: 0.2 }
+            ];
+
+            rings.forEach(({ radius, alpha }) => {
+                g.fillStyle(0xffffff, alpha);
+                g.fillCircle(center, center, radius);
+            });
+
+            g.generateTexture(this.sparkleTextureKey, size, size);
+            g.destroy();
+        }
+    }
+
     update(time, delta) {
         // Update all active spirograph animations
         this.activeOrbiters.forEach(orbitData => {
@@ -90,7 +124,9 @@ export default class Game extends Phaser.Scene {
 
     updateOrbitingItem(orbitData, delta) {
         // Increment angle
-        orbitData.angle += SPIRO_SPEED;
+        const deltaFactor = delta ? delta / 16.666 : 1; // Normalize to ~60fps
+        const angularSpeed = orbitData.angularSpeed || SPIRO_SPEED;
+        orbitData.angle += angularSpeed * deltaFactor;
 
         const { x, y } = this.calculateSpirographPoint(
             orbitData.centerX,
@@ -101,6 +137,9 @@ export default class Game extends Phaser.Scene {
             orbitData.angle
         );
 
+        const color = this.getOrbitColor(orbitData, delta);
+        const width = Math.max(1.5, (orbitData.lineWidth || 2.6) + Math.sin(orbitData.angle * 1.2) * 0.6);
+
         // Store previous position for trail (use lastX/lastY from previous frame)
         if (orbitData.lastX !== undefined && orbitData.lastY !== undefined) {
             this.trailPoints.push({
@@ -109,7 +148,8 @@ export default class Game extends Phaser.Scene {
                 x2: x,
                 y2: y,
                 alpha: 1,
-                color: orbitData.trailColor
+                color,
+                width
             });
         }
 
@@ -117,9 +157,34 @@ export default class Game extends Phaser.Scene {
         orbitData.sprite.x = x;
         orbitData.sprite.y = y;
 
+        // Keep sparkles in sync with the trail color
+        if (orbitData.sparkleEmitter) {
+            orbitData.sparkleEmitter.setParticleTint(color);
+        }
+
         // Store current position for next frame's trail
         orbitData.lastX = x;
         orbitData.lastY = y;
+    }
+
+    getOrbitColor(orbitData, delta) {
+        if (!orbitData) return 0xffffff;
+
+        const hueStep = (delta || 16.666) * ORBIT_HUE_DRIFT;
+        orbitData.hueOffset = (orbitData.hueOffset + hueStep) % 1;
+
+        const lerpOsc = orbitData.hueOsc || 0.45;
+        const lerpPhase = orbitData.huePhase || 0;
+        const tRaw = Math.sin((orbitData.angle || 0) * lerpOsc + lerpPhase + orbitData.hueOffset);
+        const t = (tRaw + 1) / 2; // 0..1
+
+        const hue = Phaser.Math.Wrap(Phaser.Math.Linear(orbitData.hueA, orbitData.hueB, t), 0, 1);
+
+        const valuePulse = Math.sin((orbitData.angle || 0) * 1.1) * 0.07;
+        const value = Phaser.Math.Clamp(0.9 + valuePulse, 0.7, 1);
+        const rgb = Phaser.Display.Color.HSVToRGB(hue, 0.85, value);
+
+        return rgb.color;
     }
 
     calculateSpirographPoint(centerX, centerY, R, r, d, t) {
@@ -144,8 +209,18 @@ export default class Game extends Phaser.Scene {
                 return false; // Remove this point
             }
 
+            const width = Math.max(1.5, point.width || 2.5);
+            const glowAlpha = Math.min(0.85, point.alpha * 0.3);
+
+            // Soft glow underlay to make the path feel painted-in
+            this.trailGraphics.lineStyle(width * 1.6, point.color, glowAlpha);
+            this.trailGraphics.beginPath();
+            this.trailGraphics.moveTo(point.x1, point.y1);
+            this.trailGraphics.lineTo(point.x2, point.y2);
+            this.trailGraphics.strokePath();
+
             // Draw line segment with current alpha
-            this.trailGraphics.lineStyle(3, point.color, point.alpha);
+            this.trailGraphics.lineStyle(width, point.color, point.alpha);
             this.trailGraphics.beginPath();
             this.trailGraphics.moveTo(point.x1, point.y1);
             this.trailGraphics.lineTo(point.x2, point.y2);
@@ -156,10 +231,6 @@ export default class Game extends Phaser.Scene {
     }
 
     startItemSpirograph(sprite, flower) {
-        // Random trail color (bright, cheerful colors)
-        const colors = [0xff6b6b, 0x4ecdc4, 0xffe66d, 0x95e1d3, 0xf38181, 0xaa96da];
-        const trailColor = Phaser.Utils.Array.GetRandom(colors);
-
         // Pick a random petal preset and apply slight variation
         const preset = Phaser.Utils.Array.GetRandom(PETAL_PRESETS);
         const vary = (value) => {
@@ -167,13 +238,23 @@ export default class Game extends Phaser.Scene {
             return value * variation;
         };
 
+        const baseHue = Math.random();
+        const secondaryHue = Phaser.Math.Wrap(baseHue + Phaser.Math.FloatBetween(0.08, 0.2), 0, 1);
+
         // Create data object with unique spirograph parameters
         const orbitData = {
             sprite,
             centerX: flower.x,
             centerY: flower.y,
             angle: Phaser.Math.FloatBetween(0, Math.PI * 2),
-            trailColor: trailColor,
+            hueA: baseHue,
+            hueB: secondaryHue,
+            hueOffset: Math.random(),
+            huePhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
+            hueOsc: Phaser.Math.FloatBetween(0.45, 0.75),
+            hueSpeed: ORBIT_HUE_DRIFT,
+            lineWidth: Phaser.Math.FloatBetween(2.0, 2.8),
+            angularSpeed: SPIRO_SPEED * Phaser.Math.FloatBetween(1.05, 1.35),
             lastX: undefined,
             lastY: undefined,
             // Unique spirograph parameters for this item
@@ -191,11 +272,41 @@ export default class Game extends Phaser.Scene {
             orbitData.spiroD,
             orbitData.angle
         );
-        sprite.setDepth(50);
+        sprite.setDepth(150);
         // Shrink the orbiting item to roughly one third of its displayed size
         sprite.setScale(sprite.scaleX * 0.5, sprite.scaleY * 0.5);
         sprite.x = startPoint.x;
         sprite.y = startPoint.y;
+
+        this.prepareSparkles();
+
+        if (this.sparkleTextureKey) {
+            const sparkleEmitter = this.add.particles(0, 0, this.sparkleTextureKey, {
+                speed: { min: SPARKLE_SPEED_MIN, max: SPARKLE_SPEED_MAX },
+                scale: { start: 0.5, end: 0.05 },
+                alpha: { start: 0.95, end: 0 },
+                lifespan: SPARKLE_LIFESPAN,
+                quantity: 2,
+                frequency: SPARKLE_FREQUENCY,
+                emitZone: {
+                    type: 'random',
+                    source: new Phaser.Geom.Circle(0, 0, SPARKLE_RADIUS)
+                },
+                blendMode: Phaser.BlendModes.ADD,
+                rotate: { min: 0, max: 90 },
+                tint: {
+                    onEmit: () => {
+                        const hueJitter = Phaser.Math.FloatBetween(-0.08, 0.18);
+                        const hue = Phaser.Math.Wrap(baseHue + hueJitter, 0, 1);
+                        return Phaser.Display.Color.HSVToRGB(hue, 0.95, 1).color;
+                    }
+                }
+            });
+            sparkleEmitter.setDepth(90);
+            sparkleEmitter.startFollow(sprite);
+            orbitData.sparkleEmitter = sparkleEmitter;
+            this.sparkleEmitters.push(sparkleEmitter);
+        }
 
         // Hide the glow effect when orbiting
         if (sprite.glowEffect) {
@@ -215,6 +326,13 @@ export default class Game extends Phaser.Scene {
                 duration: 500,
                 ease: 'Power2',
                 onComplete: () => {
+                    if (orbitData.sparkleEmitter) {
+                        orbitData.sparkleEmitter.stop();
+                        orbitData.sparkleEmitter.destroy();
+                        this.sparkleEmitters = this.sparkleEmitters.filter(em => em !== orbitData.sparkleEmitter);
+                        orbitData.sparkleEmitter = null;
+                    }
+
                     // Clean up glow effect if it exists
                     if (sprite.glowEffect) {
                         sprite.glowEffect.destroy();
@@ -892,6 +1010,10 @@ export default class Game extends Phaser.Scene {
         this.clearBackHold(this.backButtonBg);
         if (this.music) {
             this.music.stop();
+        }
+        if (this.sparkleEmitters && this.sparkleEmitters.length) {
+            this.sparkleEmitters.forEach(em => em.destroy());
+            this.sparkleEmitters = [];
         }
     }
 

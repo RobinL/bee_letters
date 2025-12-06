@@ -15,11 +15,11 @@ export const CURRICULUM_LETTER_ORDER = [
 
 // ----- Layout -----
 export const SIDEBAR_RATIO = 0.25;  // Flower zone takes 25% of screen width
-export const DROP_DISTANCE = 80;    // How close item needs to be to flower center to register
+export const DROP_DISTANCE = 120;    // How close item needs to be to flower center to register
 
 // ----- Bee & Trail Settings -----
 export const BEE_FLIGHT_DURATION = 30000;   // How long the bee flies (ms)
-export const TRAIL_PERSISTENCE = 30000;      // How long trail takes to fade (ms)
+export const TRAIL_PERSISTENCE = 10000;      // How long trail takes to fade (ms)
 
 // ----- Spirograph Pattern -----
 // Petal-like patterns work best when (R-r)/r produces nice integer ratios
@@ -34,9 +34,9 @@ export const PETAL_PRESETS = [
 ];
 
 // Variation range (multiplier applied to preset values)
-export const SPIRO_VARIATION = 0.55;  // +/- 15% variation
+export const SPIRO_VARIATION = 0.35;
 
-export const SPIRO_SPEED = 0.04; // Animation speed (radians per frame)
+export const SPIRO_SPEED = 0.06; // Base animation speed (radians per frame)
 
 // ----- Music Settings -----
 export const MUSIC_DEFAULT_VOLUME = 0.15;  // Default volume (0-1), 30% is a nice low level
