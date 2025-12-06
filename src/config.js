@@ -44,6 +44,6 @@ export const MUSIC_DEFAULT_VOLUME = 0.15;  // Default volume (0-1), 30% is a nic
 export const VOICE_DEFAULT_VOLUME = 1.0;   // Default volume for voiceovers
 
 // ----- Letter Items -----
-// Generated at dev/build time from public/assets/items and public/assets/voice
+// Generated at dev/build time from src/assets/images/items and public/assets/voice
 export const LETTER_ITEMS = manifest.items || {};
 export const LETTER_ITEM_VOICES = manifest.itemVoices || {};

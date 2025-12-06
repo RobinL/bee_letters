@@ -1,5 +1,44 @@
 import Phaser from 'phaser';
 import { CURRICULUM_LETTER_ORDER, LETTER_ITEMS, LETTER_ITEM_VOICES } from '../config.js';
+import flowerHead1 from '../assets/images/flower/flower_head_1.png';
+import flowerHead2 from '../assets/images/flower/flower_head_2.png';
+import flowerHead3 from '../assets/images/flower/flower_head_3.png';
+import bee1 from '../assets/images/bees/bee_1.png';
+import bee2 from '../assets/images/bees/bee_2.png';
+import gardenBg from '../assets/images/background/garden.png';
+import flowerBg from '../assets/images/background/flower_background.png';
+
+const ITEM_IMAGE_IMPORTS = import.meta.glob('../assets/images/items/*/*.png', {
+    eager: true,
+    query: { as: 'url' }
+});
+
+const toAssetUrl = (mod) => {
+    if (typeof mod === 'string') return mod;
+    if (mod && typeof mod === 'object' && 'default' in mod) return mod.default;
+    return '';
+};
+
+const ITEM_IMAGE_MAP = Object.entries(ITEM_IMAGE_IMPORTS).reduce((acc, [path, mod]) => {
+    const match = path.match(/items\/([a-z])\/([^/]+)\.png$/i);
+    if (!match) return acc;
+
+    const [, letterRaw, name] = match;
+    const letter = letterRaw.toLowerCase();
+    acc[letter] = acc[letter] || {};
+    acc[letter][name] = toAssetUrl(mod);
+    return acc;
+}, {});
+
+const STATIC_IMAGE_URLS = {
+    flower_head_1: toAssetUrl(flowerHead1),
+    flower_head_2: toAssetUrl(flowerHead2),
+    flower_head_3: toAssetUrl(flowerHead3),
+    bee_1: toAssetUrl(bee1),
+    bee_2: toAssetUrl(bee2),
+    garden_bg: toAssetUrl(gardenBg),
+    flower_bg: toAssetUrl(flowerBg)
+};
 
 export default class Preloader extends Phaser.Scene {
     constructor() {
@@ -39,17 +78,19 @@ export default class Preloader extends Phaser.Scene {
         this.registry.set('activeLetters', this.activeLetters);
 
         // Load flower heads
-        this.load.image('flower_head_1', 'assets/flower/flower_head_1.png');
-        this.load.image('flower_head_2', 'assets/flower/flower_head_2.png');
-        this.load.image('flower_head_3', 'assets/flower/flower_head_3.png');
+        this.load.image('flower_head_1', STATIC_IMAGE_URLS.flower_head_1);
+        this.load.image('flower_head_2', STATIC_IMAGE_URLS.flower_head_2);
+        this.load.image('flower_head_3', STATIC_IMAGE_URLS.flower_head_3);
 
         // Load item sprites dynamically from LETTER_ITEMS config
         this.activeLetters.forEach(letter => {
             const items = LETTER_ITEMS[letter] || [];
             items.forEach(itemName => {
                 const key = `${letter}_${itemName}`;
-                const path = `assets/items/${letter}/${itemName}.png`;
-                this.load.image(key, path);
+                const itemUrl = ITEM_IMAGE_MAP[letter]?.[itemName];
+                if (itemUrl) {
+                    this.load.image(key, itemUrl);
+                }
             });
 
             const voicedItems = LETTER_ITEM_VOICES[letter] || [];
@@ -64,13 +105,13 @@ export default class Preloader extends Phaser.Scene {
         });
 
         // Load bee sprites
-        this.load.image('bee_1', 'assets/bees/bee_1.png');
-        this.load.image('bee_2', 'assets/bees/bee_2.png');
+        this.load.image('bee_1', STATIC_IMAGE_URLS.bee_1);
+        this.load.image('bee_2', STATIC_IMAGE_URLS.bee_2);
 
         // Load garden background
-        this.load.image('garden_bg', 'assets/background/garden.png');
+        this.load.image('garden_bg', STATIC_IMAGE_URLS.garden_bg);
         // Load flower column background
-        this.load.image('flower_bg', 'assets/background/flower_background.png');
+        this.load.image('flower_bg', STATIC_IMAGE_URLS.flower_bg);
 
         // Load Google WebFont loader to ensure Andika is available before we render text
         this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');

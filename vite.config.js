@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function buildLetterManifest() {
-    const itemsDir = path.resolve(__dirname, 'public/assets/items');
+    const itemsDir = path.resolve(__dirname, 'src/assets/images/items');
     const voicesDir = path.resolve(__dirname, 'public/assets/voice');
     const outputPath = path.resolve(__dirname, 'src/generated/letterManifest.json');
 
@@ -74,29 +74,23 @@ export default defineConfig({
     plugins: [
         letterManifestPlugin(),
         imagetools({
-            // Intercept standard image imports
-            include: '**/*.{png,jpg,jpeg}',
-            // Apply global directives based on filename
             defaultDirectives: (url) => {
-                if (
-                    url.pathname.includes('background') ||
-                    url.pathname.includes('hero-bg') ||
-                    url.pathname.includes('footer-bg')
-                ) {
+                if (url.pathname.match(/background|hero-bg|footer-bg/)) {
                     return new URLSearchParams({
                         format: 'webp',
                         quality: '90',
+                        width: '1920',
                         as: 'url'
                     });
                 }
 
                 return new URLSearchParams({
                     format: 'webp',
-                    w: '1200',
                     quality: '60',
+                    width: '800',
                     as: 'url'
                 });
-            }
+            },
         })
     ]
 });

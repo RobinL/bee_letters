@@ -15,8 +15,8 @@ export function getWordItemList() {
             items.push({
                 letter,
                 name,
-                // Path relative to the main project's public folder
-                imagePath: `../public/assets/items/${letter}/${name}.png`,
+                // Path relative to the main project's src folder
+                imagePath: `../src/assets/images/items/${letter}/${name}.png`,
                 downloadPath: `${letter}/${name}.webm`,
             });
         });
