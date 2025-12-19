@@ -16,7 +16,8 @@
   "devDependencies": {
     "gh-pages": "^6.2.0",
     "vite": "npm:rolldown-vite@7.2.5",
-    "vite-imagetools": "^9.0.2"
+    "vite-imagetools": "^9.0.2",
+    "vite-plugin-pwa": "^0.21.2"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.5"

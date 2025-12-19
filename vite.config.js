@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { imagetools } from 'vite-imagetools';
+import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -62,8 +63,10 @@ function letterManifestPlugin() {
     };
 }
 
+const base = '/bee_letters/';
+
 export default defineConfig({
-    base: '/bee_letters/',
+    base,
     server: {
         port: 3000,
         open: true
@@ -73,6 +76,25 @@ export default defineConfig({
     },
     plugins: [
         letterManifestPlugin(),
+        VitePWA({
+            injectRegister: null,
+            registerType: 'autoUpdate',
+            manifest: {
+                name: 'Bee Letters',
+                short_name: 'Bee Letters',
+                start_url: base,
+                scope: base,
+                display: 'fullscreen',
+                background_color: '#000000',
+                theme_color: '#000000',
+                orientation: 'landscape',
+                icons: [
+                    { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                ]
+            }
+        }),
         imagetools({
             defaultDirectives: (url) => {
                 // if (url.pathname.match(/background/)) {

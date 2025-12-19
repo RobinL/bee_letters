@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import Preloader from './scenes/Preloader.js';
 import Game from './scenes/Game.js';
 import Menu from './scenes/Menu.js';
+import { registerSW } from 'virtual:pwa-register';
+
+registerSW({ immediate: true });
 
 const config = {
     type: Phaser.AUTO,
