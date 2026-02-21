@@ -21,6 +21,7 @@
       "bird",
       "boat",
       "books",
+      "bull",
       "bus",
       "butterfly"
     ],
@@ -91,6 +92,7 @@
     "i": [
       "igloo",
       "iguana",
+      "ill",
       "inkpot",
       "instrument",
       "invitation"
@@ -149,10 +151,14 @@
     ],
     "o": [
       "octopus",
+      "office",
+      "olive",
+      "opera",
       "orange",
       "orangutan",
       "ostrich",
-      "otter"
+      "otter",
+      "ox"
     ],
     "p": [
       "panda",
@@ -216,7 +222,10 @@
     ],
     "u": [
       "umbrella",
+      "umpire",
+      "underwear",
       "unidentified_object",
+      "upset",
       "urchin"
     ],
     "v": [
