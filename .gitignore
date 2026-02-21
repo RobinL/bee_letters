@@ -1,3 +1,5 @@
+new_sounds/
+new_sounds_normalised/
 *.DS_Store
 original_assets/
 secret_keys.py

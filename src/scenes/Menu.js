@@ -52,7 +52,7 @@ export default class Menu extends Phaser.Scene {
     }
 
     createLetterGrid(width, height) {
-        const columns = 6;
+        const columns = 7;
         const spacing = 110;
         const startX = width / 2 - ((columns - 1) * spacing) / 2;
         const startY = height * 0.28;
