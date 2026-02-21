@@ -79,7 +79,8 @@ for filename in sorted(os.listdir(input_dir)):
     if not filename.lower().endswith(".png"):
         continue
 
-    letter = filename.split("_", 1)[0]
+    stem = os.path.splitext(filename)[0]
+    letter = stem.split("_", 1)[0] if "_" in stem else stem
     image_path = os.path.join(input_dir, filename)
     output_folder = os.path.join(output_root, letter)
 
