@@ -10,6 +10,15 @@ const lettersInOrder = Object.keys(LETTER_ITEMS)
 
 let activeAudio = null;
 let activeCard = null;
+const DEFAULT_PREVIEW_BACKGROUND = 'white';
+const PREVIEW_BACKGROUND_OPTIONS = [
+    { value: 'white', label: 'White', color: '#ffffff' },
+    { value: 'cream', label: 'Cream', color: '#fff7df' },
+    { value: 'light-gray', label: 'Light Gray', color: '#e8e8e8' },
+    { value: 'charcoal', label: 'Charcoal', color: '#2f343a' },
+    { value: 'black', label: 'Black', color: '#000000' },
+    { value: 'sky', label: 'Sky Blue', color: '#cfefff' },
+];
 
 function voicePath(letter, itemName) {
     return `${baseUrl}assets/voice/${letter}/${itemName}.webm`;
@@ -59,6 +68,44 @@ function playVoice(letter, itemName, card) {
     audio.play().catch(clearState);
 }
 
+function setPreviewBackground(value) {
+    const selected = PREVIEW_BACKGROUND_OPTIONS.find((option) => option.value === value)
+        || PREVIEW_BACKGROUND_OPTIONS[0];
+
+    root?.style.setProperty('--preview-bg', selected.color);
+}
+
+function createBackgroundSelector() {
+    const controls = document.createElement('div');
+    controls.className = 'controls';
+
+    const label = document.createElement('label');
+    label.className = 'control-label';
+    label.setAttribute('for', 'preview-bg-select');
+    label.textContent = 'Image background:';
+
+    const select = document.createElement('select');
+    select.className = 'control-select';
+    select.id = 'preview-bg-select';
+    select.setAttribute('aria-label', 'Image background color');
+
+    PREVIEW_BACKGROUND_OPTIONS.forEach((option) => {
+        const optionEl = document.createElement('option');
+        optionEl.value = option.value;
+        optionEl.textContent = option.label;
+        select.appendChild(optionEl);
+    });
+
+    select.value = DEFAULT_PREVIEW_BACKGROUND;
+    setPreviewBackground(select.value);
+    select.addEventListener('change', (event) => {
+        setPreviewBackground(event.target.value);
+    });
+
+    controls.append(label, select);
+    return controls;
+}
+
 function createItemCard(letter, itemName) {
     const playable = hasVoice(letter, itemName);
     const imageUrl = getItemImageUrl(letter, itemName);
@@ -74,6 +121,10 @@ function createItemCard(letter, itemName) {
     img.src = imageUrl;
     img.alt = formatItemLabel(itemName);
     img.loading = 'lazy';
+    
+    const imageWrap = document.createElement('div');
+    imageWrap.className = 'item-image-wrap';
+    imageWrap.appendChild(img);
 
     const label = document.createElement('span');
     label.className = 'item-label';
@@ -83,7 +134,7 @@ function createItemCard(letter, itemName) {
     status.className = 'item-status';
     status.textContent = playable ? 'Tap to hear' : 'No audio yet';
 
-    card.append(img, label, status);
+    card.append(imageWrap, label, status);
 
     if (playable) {
         card.addEventListener('click', () => playVoice(letter, itemName, card));
@@ -133,9 +184,10 @@ function render() {
     const hint = document.createElement('p');
     hint.className = 'hint';
     hint.textContent = 'Tap any picture to play its sound.';
+    const controls = createBackgroundSelector();
 
     top.append(title, backLink);
-    root.append(top, hint);
+    root.append(top, controls, hint);
 
     lettersInOrder.forEach((letter) => {
         root.appendChild(createLetterSection(letter));
