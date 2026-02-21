@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Letters Catalogue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-top: #e8f8f4;
+            --bg-bottom: #fff7df;
+            --ink: #2f3a2b;
+            --card: #ffffff;
+            --accent: #6aa84f;
+            --accent-2: #ffd966;
+            --muted: #7b8a75;
+            --border: #d6e6cf;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Andika', sans-serif;
+            color: var(--ink);
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 65%);
+        }
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 20px 16px 56px;
+        }
+
+        .top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            margin: 0;
+            font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+        }
+
+        .back-link {
+            color: #265b22;
+            text-decoration: none;
+            font-weight: 700;
+            background: #ffffffd9;
+            border: 2px solid var(--border);
+            border-radius: 999px;
+            padding: 8px 14px;
+        }
+
+        .hint {
+            margin: 0 0 24px;
+            color: #405039;
+            font-size: 1.05rem;
+        }
+
+        .controls {
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-label {
+            font-weight: 700;
+            color: #305f2f;
+        }
+
+        .control-select {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 7px 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--ink);
+            background: #fff;
+        }
+
+        .letter-section {
+            margin-bottom: 28px;
+            padding: 14px 14px 18px;
+            border-radius: 16px;
+            background: #ffffffc7;
+            border: 2px solid var(--border);
+            backdrop-filter: blur(2px);
+        }
+
+        .letter-heading {
+            margin: 0 0 12px;
+            font-size: 1.4rem;
+            color: #305f2f;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .item-card {
+            border: 2px solid var(--border);
+            background: var(--card);
+            border-radius: 14px;
+            padding: 10px 8px 12px;
+            cursor: pointer;
+            transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+            min-height: 146px;
+        }
+
+        .item-card:hover,
+        .item-card:focus-visible {
+            border-color: #95c47f;
+            box-shadow: 0 5px 16px #6aa84f22;
+            transform: translateY(-2px);
+            outline: none;
+        }
+
+        .item-card.not-playable {
+            opacity: 0.75;
+            cursor: default;
+        }
+
+        .item-card.not-playable:hover,
+        .item-card.not-playable:focus-visible {
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 84px;
+            object-fit: contain;
+            margin-bottom: 6px;
+        }
+
+        .item-image-wrap {
+            background: var(--preview-bg, #ffffff);
+            border-radius: 10px;
+            padding: 6px;
+            margin-bottom: 6px;
+            border: 1px solid #00000014;
+        }
+
+        .item-label {
+            display: block;
+            text-align: center;
+            font-size: 0.98rem;
+            color: #2f3a2b;
+        }
+
+        .item-status {
+            display: block;
+            margin-top: 3px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .item-card.playing {
+            border-color: #f4b400;
+            background: #fff7cc;
+        }
+
+        @media (max-width: 640px) {
+            .item-grid {
+                grid-template-columns: repeat(auto-fill, minmax(106px, 1fr));
+            }
+
+            .item-card {
+                min-height: 130px;
+                padding: 8px 6px 10px;
+            }
+
+            .item-image {
+                height: 70px;
+            }
+        }
+    </style>
+  <script type="module" crossorigin src="/bee_letters/assets/catalogue-HUhepMdL.js"></script>
+  <link rel="modulepreload" crossorigin href="/bee_letters/assets/itemAssets-ByEzy1ze.js">
+<link rel="manifest" href="/bee_letters/manifest.webmanifest"></head>
+
+<body>
+    <main id="catalogue-root" class="page"></main>
+</body>
+
+</html>
