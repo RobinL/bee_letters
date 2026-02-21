@@ -1,5 +1,8 @@
+*.DS_Store
 original_assets/
-
+secret_keys.py
+processed_assets/
+*.pyc
 # Logs
 logs
 *.log

@@ -72,7 +72,13 @@ export default defineConfig({
         open: true
     },
     build: {
-        outDir: 'dist'
+        outDir: 'dist',
+        rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'index.html'),
+                catalogue: path.resolve(__dirname, 'catalogue/index.html')
+            }
+        }
     },
     plugins: [
         letterManifestPlugin(),

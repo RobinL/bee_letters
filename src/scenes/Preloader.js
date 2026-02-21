@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CURRICULUM_LETTER_ORDER, LETTER_ITEMS, LETTER_ITEM_VOICES } from '../config.js';
+import { ITEM_IMAGE_MAP } from '../assets/itemAssets.js';
 import flowerHead1 from '../assets/images/flower/flower_head_1.png';
 import flowerHead2 from '../assets/images/flower/flower_head_2.png';
 import flowerHead3 from '../assets/images/flower/flower_head_3.png';
@@ -8,27 +9,11 @@ import bee2 from '../assets/images/bees/bee_2.png';
 import gardenBg from '../assets/images/background/garden.png';
 import flowerBg from '../assets/images/background/flower_background.png';
 
-const ITEM_IMAGE_IMPORTS = import.meta.glob('../assets/images/items/*/*.png', {
-    eager: true,
-    query: { as: 'url' }
-});
-
 const toAssetUrl = (mod) => {
     if (typeof mod === 'string') return mod;
     if (mod && typeof mod === 'object' && 'default' in mod) return mod.default;
     return '';
 };
-
-const ITEM_IMAGE_MAP = Object.entries(ITEM_IMAGE_IMPORTS).reduce((acc, [path, mod]) => {
-    const match = path.match(/items\/([a-z])\/([^/]+)\.png$/i);
-    if (!match) return acc;
-
-    const [, letterRaw, name] = match;
-    const letter = letterRaw.toLowerCase();
-    acc[letter] = acc[letter] || {};
-    acc[letter][name] = toAssetUrl(mod);
-    return acc;
-}, {});
 
 const STATIC_IMAGE_URLS = {
     flower_head_1: toAssetUrl(flowerHead1),

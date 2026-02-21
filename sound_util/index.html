@@ -64,6 +64,39 @@
             line-height: 1.5;
         }
 
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 12px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7f3;
+            border-radius: 10px;
+            background: #f8f9ff;
+            color: #4a4a6a;
+            font-size: 0.95rem;
+        }
+
+        .filter-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .filter-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .filter-info {
+            color: #667;
+            font-size: 0.85rem;
+        }
+
         .container {
             background: white;
             border-radius: 20px;
@@ -312,9 +345,42 @@
             background: #e8f5e9;
         }
 
+        .item-list-item.existing {
+            border-left: 3px solid #8ea5ff;
+        }
+
+        .item-markers {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 72px;
+            justify-content: flex-end;
+        }
+
+        .existing-marker {
+            color: #4f63b6;
+            background: #edf1ff;
+            border: 1px solid #d5defe;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.72rem;
+            line-height: 1.2;
+            min-height: 20px;
+            display: inline-flex;
+            align-items: center;
+        }
+
         .item-list-item .checkmark {
             color: #4CAF50;
             font-weight: bold;
+            width: 16px;
+            text-align: center;
+        }
+
+        .item-list-empty {
+            color: #666;
+            text-align: center;
+            padding: 14px;
         }
     </style>
 </head>
@@ -329,6 +395,13 @@
         </div>
         <div class="mode-description" id="modeDescription">
             Record the spoken words for each picture used in the game.
+        </div>
+        <div class="filter-toggle">
+            <label for="toggleHideExisting">
+                <input id="toggleHideExisting" type="checkbox" checked>
+                Hide items with existing recordings
+            </label>
+            <span class="filter-info" id="filterInfo"></span>
         </div>
 
         <div class="progress-text" id="progressText">0 / 0 recorded</div>

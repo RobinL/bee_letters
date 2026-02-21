@@ -1,28 +1,32 @@
 // Item lists for the sound recording utility.
-// Derived from the generated manifest (kept in sync with the main game assets).
-import letterManifest from '../../src/generated/letterManifest.json';
-
-const WORD_ITEMS = (letterManifest && letterManifest.items) ? letterManifest.items : {};
+// Word items are discovered directly from image files in the main game.
 
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const WORD_IMAGE_URLS = import.meta.glob('../../src/assets/images/items/*/*.png', {
+    eager: true,
+    import: 'default'
+});
 
 // Generate flat array of word items with paths
 export function getWordItemList() {
-    const items = [];
+    return Object.entries(WORD_IMAGE_URLS)
+        .map(([imageModulePath, imagePath]) => {
+            const match = imageModulePath.match(/\/items\/([a-z])\/(.+)\.png$/i);
+            if (!match) return null;
 
-    Object.entries(WORD_ITEMS).forEach(([letter, itemNames]) => {
-        itemNames.forEach(name => {
-            items.push({
+            const letter = match[1].toLowerCase();
+            const name = match[2];
+
+            return {
                 letter,
                 name,
-                // Path relative to the main project's src folder
-                imagePath: `../src/assets/images/items/${letter}/${name}.png`,
+                imagePath,
+                voicePath: `${letter}/${name}.webm`,
                 downloadPath: `${letter}/${name}.webm`,
-            });
-        });
-    });
-
-    return items;
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.letter.localeCompare(b.letter) || a.name.localeCompare(b.name));
 }
 
 // Generate letter-only recording items (a.webm, b.webm, etc.)
@@ -31,6 +35,7 @@ export function getLetterSoundList() {
         letter,
         name: letter,
         imagePath: buildLetterSvgDataUrl(letter),
+        voicePath: `alphabet/${letter}.webm`,
         downloadPath: `${letter}.webm`,
     }));
 }

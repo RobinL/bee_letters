@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { getLetterSoundList, getWordItemList } from './items.js';
+const VOICE_ASSET_ROOT = '/assets/voice';
 
 // Helpers to decorate item data for UI and recording management
 function decorateItems(rawItems, datasetKey) {
@@ -59,6 +60,8 @@ let items = datasets[activeDatasetKey].items;
 let currentIndex = 0;
 let recordings = new Map(); // Map<recordingKey, Blob>
 let itemLookup = buildItemLookup(); // Map<recordingKey, item>
+let hideExistingRecordings = true;
+let existingVoicePaths = new Set();
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
@@ -71,6 +74,8 @@ const elements = {
     progressFill: document.getElementById('progressFill'),
     btnModeWords: document.getElementById('btnModeWords'),
     btnModeLetters: document.getElementById('btnModeLetters'),
+    toggleHideExisting: document.getElementById('toggleHideExisting'),
+    filterInfo: document.getElementById('filterInfo'),
     modeDescription: document.getElementById('modeDescription'),
     itemImage: document.getElementById('itemImage'),
     itemName: document.getElementById('itemName'),
@@ -88,14 +93,10 @@ const elements = {
 
 // Initialize
 async function init() {
-    if (items.length === 0) {
-        elements.itemName.textContent = 'No items found!';
-        return;
-    }
-
     // Setup event listeners
     elements.btnModeWords.addEventListener('click', () => switchDataset('words'));
     elements.btnModeLetters.addEventListener('click', () => switchDataset('letters'));
+    elements.toggleHideExisting.addEventListener('change', handleHideExistingToggle);
     elements.btnRecord.addEventListener('click', toggleRecording);
     elements.btnStop.addEventListener('click', stopRecording);
     elements.btnPlay.addEventListener('click', playRecording);
@@ -104,6 +105,10 @@ async function init() {
     elements.btnNext.addEventListener('click', () => navigate(1));
     elements.btnDownloadAll.addEventListener('click', downloadAll);
     document.addEventListener('keydown', handleGlobalKeydown);
+    elements.toggleHideExisting.checked = hideExistingRecordings;
+
+    await loadExistingVoicePathIndex();
+    refreshVisibleItems();
 
     // Request microphone permission early
     try {
@@ -117,18 +122,36 @@ async function init() {
     }
 
     // Display first item
-    updateModeButtons();
     updateDisplay();
-    renderItemList();
 }
 
 function updateDisplay() {
+    updateModeButtons();
+    updateFilterInfo();
+
     if (!items.length) {
-        elements.itemName.textContent = 'No items found!';
+        const hiddenCount = getExistingCountForActiveDataset();
+        const allFilteredOut = hideExistingRecordings && hiddenCount > 0;
+
+        elements.itemImage.removeAttribute('src');
+        elements.itemImage.alt = 'No items';
+        elements.itemName.textContent = allFilteredOut
+            ? 'All items already have recordings'
+            : 'No items found';
+        elements.itemLetter.textContent = allFilteredOut
+            ? 'Disable the filter to view existing recordings.'
+            : '';
+        elements.status.textContent = allFilteredOut
+            ? 'Everything in this list already exists in public/assets/voice.'
+            : 'No items available.';
+        elements.status.className = 'status recorded';
+        elements.btnPrev.disabled = true;
+        elements.btnNext.disabled = true;
+        updateRecordButtonState(false);
+        updateProgress();
+        renderItemList();
         return;
     }
-
-    updateModeButtons();
 
     const item = items[currentIndex];
 
@@ -147,6 +170,7 @@ function updateDisplay() {
 
     // Update status based on recording state
     const hasRecording = recordings.has(item.recordingKey);
+    const hasExistingRecording = existingVoicePaths.has(item.voicePath);
     if (isStartingRecording) {
         elements.status.innerHTML = '<span class="recording-indicator"></span>Preparing mic...';
         elements.status.className = 'status recording';
@@ -155,6 +179,9 @@ function updateDisplay() {
         elements.status.className = 'status recording';
     } else if (hasRecording) {
         elements.status.textContent = '✓ Recorded';
+        elements.status.className = 'status recorded';
+    } else if (hasExistingRecording) {
+        elements.status.textContent = '✓ Recording already exists on disk';
         elements.status.className = 'status recorded';
     } else {
         elements.status.textContent = 'Not recorded yet';
@@ -175,7 +202,7 @@ function updateRecordButtonState(hasRecording) {
     const recordLabel = isRecording ? '⏹️ Stop (Space)' : '🎙️ Record (Space)';
     elements.btnRecord.textContent = isStartingRecording ? '⏳ Preparing...' : recordLabel;
     elements.btnRecord.classList.toggle('recording', isRecording || isStartingRecording);
-    elements.btnRecord.disabled = isStartingRecording;
+    elements.btnRecord.disabled = isStartingRecording || items.length === 0;
 
     // Stop button only useful while recording
     elements.btnStop.disabled = !isRecording;
@@ -189,8 +216,10 @@ function updateProgress() {
     const recorded = items.filter(item => recordings.has(item.recordingKey)).length;
     const total = items.length;
     const percent = total > 0 ? (recorded / total) * 100 : 0;
+    const hiddenCount = getExistingCountForActiveDataset();
 
-    elements.progressText.textContent = `${recorded} / ${total} recorded (${datasets[activeDatasetKey].label})`;
+    const hiddenText = hideExistingRecordings && hiddenCount > 0 ? `, ${hiddenCount} hidden` : '';
+    elements.progressText.textContent = `${recorded} / ${total} recorded (${datasets[activeDatasetKey].label}${hiddenText})`;
     elements.progressFill.style.width = `${percent}%`;
 
     // Enable bulk download if any recordings exist
@@ -198,15 +227,24 @@ function updateProgress() {
 }
 
 function renderItemList() {
+    if (!items.length) {
+        elements.itemList.innerHTML = '<div class="item-list-empty">No items to show.</div>';
+        return;
+    }
+
     elements.itemList.innerHTML = items.map((item, index) => {
         const isRecorded = recordings.has(item.recordingKey);
         const isCurrent = index === currentIndex;
+        const hasExistingRecording = existingVoicePaths.has(item.voicePath);
 
         return `
-            <div class="item-list-item ${isCurrent ? 'current' : ''} ${isRecorded ? 'recorded' : ''}"
+            <div class="item-list-item ${isCurrent ? 'current' : ''} ${isRecorded ? 'recorded' : ''} ${hasExistingRecording ? 'existing' : ''}"
                  data-index="${index}">
                 <span>${item.listLabel}</span>
-                <span class="checkmark">${isRecorded ? '✓' : ''}</span>
+                <span class="item-markers">
+                    <span class="existing-marker">${hasExistingRecording ? 'On disk' : ''}</span>
+                    <span class="checkmark">${isRecorded ? '✓' : ''}</span>
+                </span>
             </div>
         `;
     }).join('');
@@ -240,8 +278,8 @@ function switchDataset(datasetKey) {
     stopPlayback();
 
     activeDatasetKey = datasetKey;
-    items = datasets[activeDatasetKey].items;
     currentIndex = 0;
+    refreshVisibleItems();
     updateDisplay();
 }
 
@@ -266,6 +304,7 @@ function toggleRecording() {
 
 async function startRecording() {
     if (isRecording || isStartingRecording) return;
+    if (!items.length) return;
     isStartingRecording = true;
     updateDisplay();
 
@@ -342,6 +381,7 @@ function stopPlayback() {
 }
 
 function playRecording() {
+    if (!items.length) return;
     const item = items[currentIndex];
     playRecordingForKey(item.recordingKey);
 }
@@ -392,6 +432,7 @@ function autoPlayAndAdvance(recordingKey) {
 }
 
 function downloadCurrent() {
+    if (!items.length) return;
     const item = items[currentIndex];
     const blob = recordings.get(item.recordingKey);
 
@@ -458,6 +499,140 @@ function scrollCurrentItemIntoView() {
     const currentEl = elements.itemList.querySelector('.item-list-item.current');
     if (!currentEl) return;
     currentEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function handleHideExistingToggle() {
+    if (isRecording || isStartingRecording) {
+        elements.toggleHideExisting.checked = hideExistingRecordings;
+        return;
+    }
+
+    const previousItem = items[currentIndex];
+    hideExistingRecordings = elements.toggleHideExisting.checked;
+    stopPlayback();
+    refreshVisibleItems(previousItem && previousItem.recordingKey);
+    updateDisplay();
+}
+
+function refreshVisibleItems(preferredRecordingKey = null) {
+    const datasetItems = datasets[activeDatasetKey].items;
+
+    items = hideExistingRecordings
+        ? datasetItems.filter(item => !existingVoicePaths.has(item.voicePath))
+        : datasetItems.slice();
+
+    if (!items.length) {
+        currentIndex = 0;
+        return;
+    }
+
+    if (preferredRecordingKey) {
+        const preferredIndex = items.findIndex(item => item.recordingKey === preferredRecordingKey);
+        if (preferredIndex !== -1) {
+            currentIndex = preferredIndex;
+            return;
+        }
+    }
+
+    if (currentIndex >= items.length) {
+        currentIndex = items.length - 1;
+    }
+}
+
+function getExistingCountForActiveDataset() {
+    return datasets[activeDatasetKey].items.reduce(
+        (count, item) => count + (existingVoicePaths.has(item.voicePath) ? 1 : 0),
+        0
+    );
+}
+
+function updateFilterInfo() {
+    const existingCount = getExistingCountForActiveDataset();
+    if (hideExistingRecordings) {
+        elements.filterInfo.textContent = existingCount > 0 ? `${existingCount} hidden` : 'Nothing hidden';
+        return;
+    }
+    elements.filterInfo.textContent = existingCount > 0 ? `${existingCount} available to hide` : 'Filter disabled';
+}
+
+async function loadExistingVoicePathIndex() {
+    const allVoicePaths = [...new Set(
+        Object.values(datasets)
+            .flatMap(dataset => dataset.items)
+            .map(item => item.voicePath)
+            .filter(Boolean)
+    )];
+
+    if (allVoicePaths.length === 0) return;
+
+    const checks = await Promise.all(allVoicePaths.map(async voicePath => {
+        const exists = await doesVoiceFileExist(voicePath);
+        return exists ? voicePath : null;
+    }));
+
+    existingVoicePaths = new Set(checks.filter(Boolean));
+}
+
+async function doesVoiceFileExist(voicePath) {
+    const url = `${VOICE_ASSET_ROOT}/${voicePath}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'HEAD',
+            cache: 'no-store',
+            headers: { Accept: 'audio/webm,video/webm,*/*;q=0.1' }
+        });
+
+        if (isAudioLikeResponse(response)) return true;
+        if (isHtmlFallbackResponse(response) || isHttpMiss(response)) return false;
+    } catch (err) {
+        // Continue to GET probe.
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            cache: 'no-store',
+            headers: {
+                Range: 'bytes=0-3',
+                Accept: 'audio/webm,video/webm,*/*;q=0.1'
+            }
+        });
+
+        if (!(response.ok || response.status === 206)) return false;
+        if (isHtmlFallbackResponse(response)) return false;
+        if (isAudioLikeResponse(response)) return true;
+
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        return hasEbmlHeader(bytes);
+    } catch (err) {
+        return false;
+    }
+}
+
+function isHttpMiss(response) {
+    return response.status === 404 || response.status === 410;
+}
+
+function isHtmlFallbackResponse(response) {
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    return contentType.includes('text/html');
+}
+
+function isAudioLikeResponse(response) {
+    if (!response.ok && response.status !== 206) return false;
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    return contentType.includes('audio/')
+        || contentType.includes('video/')
+        || contentType.includes('application/octet-stream');
+}
+
+function hasEbmlHeader(bytes) {
+    if (bytes.length < 4) return false;
+    return bytes[0] === 0x1a
+        && bytes[1] === 0x45
+        && bytes[2] === 0xdf
+        && bytes[3] === 0xa3;
 }
 
 // Start the app
