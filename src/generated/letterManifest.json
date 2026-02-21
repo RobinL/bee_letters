@@ -21,7 +21,6 @@
       "bird",
       "boat",
       "books",
-      "bull",
       "bus",
       "butterfly"
     ],
@@ -274,17 +273,20 @@
   },
   "itemVoices": {
     "a": [
+      "aardvark",
       "accordion",
       "acorn",
       "alligator",
       "anchor",
       "ant",
+      "anteater",
       "apple",
       "arrow",
       "astronaut"
     ],
     "b": [
       "bananas",
+      "bat",
       "beachball",
       "bear",
       "bee",
@@ -296,6 +298,7 @@
     ],
     "c": [
       "cake",
+      "capybara",
       "car",
       "castle",
       "cat",
@@ -352,6 +355,7 @@
       "heart",
       "hedgehog",
       "helicopter",
+      "hippopotamus",
       "horse",
       "hotdog",
       "house"
@@ -359,6 +363,7 @@
     "i": [
       "igloo",
       "iguana",
+      "ill",
       "inkpot",
       "instrument",
       "invitation"
@@ -375,6 +380,7 @@
     ],
     "k": [
       "kangaroo",
+      "karate",
       "key",
       "kite",
       "kiwi",
@@ -387,12 +393,15 @@
       "lemur",
       "lettuce",
       "library",
-      "llama"
+      "llama",
+      "lynx"
     ],
     "m": [
       "map",
+      "meercat",
       "milk_carton",
       "mitten",
+      "mole",
       "monkey",
       "moon",
       "mountain",
@@ -413,9 +422,14 @@
     ],
     "o": [
       "octopus",
+      "office",
+      "olive",
+      "opera",
       "orange",
       "orangutan",
-      "ostrich"
+      "ostrich",
+      "otter",
+      "ox"
     ],
     "p": [
       "panda",
@@ -435,12 +449,16 @@
       "quill",
       "quilt",
       "quince",
-      "quiver"
+      "quiver",
+      "quokka"
     ],
     "r": [
       "rabbit",
       "radishes",
       "rainbow",
+      "rat",
+      "ray",
+      "red_panda",
       "ring",
       "robin",
       "robot",
@@ -450,11 +468,16 @@
     ],
     "s": [
       "sailboat",
+      "scorpion",
       "sheep",
+      "sloth",
+      "snail",
       "snake",
       "snowman",
       "socks",
+      "spider",
       "star",
+      "stick_bug",
       "strawberry",
       "sun"
     ],
@@ -470,7 +493,10 @@
     ],
     "u": [
       "umbrella",
+      "umpire",
+      "underwear",
       "unidentified_object",
+      "upset",
       "urchin"
     ],
     "v": [
@@ -493,7 +519,28 @@
       "wind",
       "wizard",
       "wolf",
+      "wolverine",
       "worm"
+    ],
+    "x": [
+      "x-ray",
+      "xylophone"
+    ],
+    "y": [
+      "yak",
+      "yeti",
+      "yogurt",
+      "yolk",
+      "yoyo"
+    ],
+    "z": [
+      "zebra",
+      "zeppelin",
+      "zigzag",
+      "zip",
+      "zipline",
+      "zoo",
+      "zoom"
     ]
   }
 }
