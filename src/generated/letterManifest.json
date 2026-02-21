@@ -1,6 +1,7 @@
 {
   "items": {
     "a": [
+      "aardvark",
       "accordion",
       "acorn",
       "alligator",
@@ -25,6 +26,7 @@
     ],
     "c": [
       "cake",
+      "capybara",
       "car",
       "castle",
       "cat",
@@ -171,13 +173,16 @@
       "quill",
       "quilt",
       "quince",
-      "quiver"
+      "quiver",
+      "quokka"
     ],
     "r": [
       "rabbit",
       "radishes",
       "rainbow",
       "rat",
+      "ray",
+      "red_panda",
       "ring",
       "robin",
       "robot",
