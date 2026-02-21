@@ -33,6 +33,12 @@ export default class Game extends Phaser.Scene {
         const savedLetters = this.registry.get('activeLetters');
         const availableLetters = Object.keys(LETTER_ITEMS);
 
+        // Reset transient scene state on every run (scene instances are reused).
+        this.activeOrbiters = [];
+        this.sparkleEmitters = [];
+        this.trailPoints = [];
+        this.gameComplete = false;
+
         if (Array.isArray(savedLetters) && savedLetters.length) {
             this.activeLetters = [...savedLetters];
         } else {
@@ -67,9 +73,6 @@ export default class Game extends Phaser.Scene {
 
         // Setup drag and drop input
         this.setupDragAndDrop();
-
-        // Store trail points for fading effect
-        this.trailPoints = [];
 
         // Start background music
         this.startMusic();
@@ -133,15 +136,20 @@ export default class Game extends Phaser.Scene {
 
     update(time, delta) {
         // Update all active spirograph animations
-        this.activeOrbiters.forEach(orbitData => {
-            this.updateOrbitingItem(orbitData, delta);
-        });
+        this.activeOrbiters = this.activeOrbiters.filter(orbitData => this.updateOrbitingItem(orbitData, delta));
 
         // Draw and fade trails
-        this.drawTrails(delta);
+        if (this.trailGraphics) {
+            this.drawTrails(delta);
+        }
     }
 
     updateOrbitingItem(orbitData, delta) {
+        if (!orbitData || !orbitData.sprite || !orbitData.sprite.active || !orbitData.sprite.scene) {
+            this.cleanupOrbitEmitter(orbitData);
+            return false;
+        }
+
         // Increment angle
         const deltaFactor = delta ? delta / 16.666 : 1; // Normalize to ~60fps
         const angularSpeed = orbitData.angularSpeed || SPIRO_SPEED;
@@ -178,12 +186,33 @@ export default class Game extends Phaser.Scene {
 
         // Keep sparkles in sync with the trail color
         if (orbitData.sparkleEmitter) {
-            orbitData.sparkleEmitter.setParticleTint(color);
+            if (orbitData.sparkleEmitter.ops && orbitData.sparkleEmitter.ops.tint) {
+                orbitData.sparkleEmitter.setParticleTint(color);
+            } else {
+                this.cleanupOrbitEmitter(orbitData);
+            }
         }
 
         // Store current position for next frame's trail
         orbitData.lastX = x;
         orbitData.lastY = y;
+
+        return true;
+    }
+
+    cleanupOrbitEmitter(orbitData) {
+        if (!orbitData || !orbitData.sparkleEmitter) return;
+
+        const emitter = orbitData.sparkleEmitter;
+        orbitData.sparkleEmitter = null;
+        this.sparkleEmitters = this.sparkleEmitters.filter(em => em !== emitter);
+
+        if (emitter.ops) {
+            emitter.stop();
+        }
+        if (emitter.scene || emitter.ops) {
+            emitter.destroy();
+        }
     }
 
     getOrbitColor(orbitData, delta) {
@@ -337,6 +366,15 @@ export default class Game extends Phaser.Scene {
 
         // Remove item after duration
         this.time.delayedCall(BEE_FLIGHT_DURATION, () => {
+            if (!sprite || !sprite.active || !sprite.scene) {
+                this.cleanupOrbitEmitter(orbitData);
+                const staleIndex = this.activeOrbiters.indexOf(orbitData);
+                if (staleIndex > -1) {
+                    this.activeOrbiters.splice(staleIndex, 1);
+                }
+                return;
+            }
+
             // Fade out item
             this.tweens.add({
                 targets: sprite,
@@ -345,12 +383,7 @@ export default class Game extends Phaser.Scene {
                 duration: 500,
                 ease: 'Power2',
                 onComplete: () => {
-                    if (orbitData.sparkleEmitter) {
-                        orbitData.sparkleEmitter.stop();
-                        orbitData.sparkleEmitter.destroy();
-                        this.sparkleEmitters = this.sparkleEmitters.filter(em => em !== orbitData.sparkleEmitter);
-                        orbitData.sparkleEmitter = null;
-                    }
+                    this.cleanupOrbitEmitter(orbitData);
 
                     // Clean up glow effect if it exists
                     if (sprite.glowEffect) {
@@ -1026,6 +1059,8 @@ export default class Game extends Phaser.Scene {
 
     returnToMenu() {
         this.clearBackHold(this.backButtonBg);
+        this.activeOrbiters = [];
+        this.trailPoints = [];
         if (this.music) {
             this.music.stop();
         }
@@ -1034,11 +1069,24 @@ export default class Game extends Phaser.Scene {
 
     cleanupScene() {
         this.clearBackHold(this.backButtonBg);
+        this.activeOrbiters.forEach(orbitData => this.cleanupOrbitEmitter(orbitData));
+        this.activeOrbiters = [];
         if (this.music) {
             this.music.stop();
         }
+        if (this.trailGraphics) {
+            this.trailGraphics.clear();
+        }
+        this.trailPoints = [];
         if (this.sparkleEmitters && this.sparkleEmitters.length) {
-            this.sparkleEmitters.forEach(em => em.destroy());
+            this.sparkleEmitters.forEach(em => {
+                if (em.ops) {
+                    em.stop();
+                }
+                if (em.scene || em.ops) {
+                    em.destroy();
+                }
+            });
             this.sparkleEmitters = [];
         }
     }

@@ -3,16 +3,17 @@
     "a": [
       "accordion",
       "acorn",
-      "airplane",
       "alligator",
       "anchor",
       "ant",
+      "anteater",
       "apple",
       "arrow",
       "astronaut"
     ],
     "b": [
       "bananas",
+      "bat",
       "beachball",
       "bear",
       "bee",
@@ -81,19 +82,17 @@
       "heart",
       "hedgehog",
       "helicopter",
+      "hippopotamus",
       "horse",
       "hotdog",
       "house"
     ],
     "i": [
-      "ice_cream",
       "igloo",
       "iguana",
       "inkpot",
       "instrument",
-      "invitation",
-      "iron",
-      "island"
+      "invitation"
     ],
     "j": [
       "jaguar",
@@ -120,12 +119,15 @@
       "lemur",
       "lettuce",
       "library",
-      "llama"
+      "llama",
+      "lynx"
     ],
     "m": [
       "map",
+      "meercat",
       "milk_carton",
       "mitten",
+      "mole",
       "monkey",
       "moon",
       "mountain",
@@ -145,13 +147,11 @@
       "nuts"
     ],
     "o": [
-      "oar",
       "octopus",
-      "onion",
       "orange",
       "orangutan",
       "ostrich",
-      "owl"
+      "otter"
     ],
     "p": [
       "panda",
@@ -177,6 +177,7 @@
       "rabbit",
       "radishes",
       "rainbow",
+      "rat",
       "ring",
       "robin",
       "robot",
@@ -186,11 +187,16 @@
     ],
     "s": [
       "sailboat",
+      "scorpion",
       "sheep",
+      "sloth",
+      "snail",
       "snake",
       "snowman",
       "socks",
+      "spider",
       "star",
+      "stick_bug",
       "strawberry",
       "sun"
     ],
@@ -205,13 +211,9 @@
       "turtle"
     ],
     "u": [
-      "ukulele",
       "umbrella",
-      "unicorn",
-      "unicycle",
       "unidentified_object",
-      "urchin",
-      "utensils"
+      "urchin"
     ],
     "v": [
       "vacuum",
@@ -233,14 +235,34 @@
       "wind",
       "wizard",
       "wolf",
+      "wolverine",
       "worm"
+    ],
+    "x": [
+      "x-ray",
+      "xylophone"
+    ],
+    "y": [
+      "yak",
+      "yeti",
+      "yogurt",
+      "yolk",
+      "yoyo"
+    ],
+    "z": [
+      "zebra",
+      "zeppelin",
+      "zigzag",
+      "zip",
+      "zipline",
+      "zoo",
+      "zoom"
     ]
   },
   "itemVoices": {
     "a": [
       "accordion",
       "acorn",
-      "airplane",
       "alligator",
       "anchor",
       "ant",
@@ -323,14 +345,11 @@
       "house"
     ],
     "i": [
-      "ice_cream",
       "igloo",
       "iguana",
       "inkpot",
       "instrument",
-      "invitation",
-      "iron",
-      "island"
+      "invitation"
     ],
     "j": [
       "jaguar",
@@ -382,13 +401,10 @@
       "nuts"
     ],
     "o": [
-      "oar",
       "octopus",
-      "onion",
       "orange",
       "orangutan",
-      "ostrich",
-      "owl"
+      "ostrich"
     ],
     "p": [
       "panda",
@@ -442,13 +458,9 @@
       "turtle"
     ],
     "u": [
-      "ukulele",
       "umbrella",
-      "unicorn",
-      "unicycle",
       "unidentified_object",
-      "urchin",
-      "utensils"
+      "urchin"
     ],
     "v": [
       "vacuum",
